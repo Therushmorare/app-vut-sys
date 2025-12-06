@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from 'react';
+import axios from "axios";
 import { GraduationCap, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { COLORS } from '../../constants/colors';
 
@@ -31,10 +32,25 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validateForm()) {
-      onLogin(formData);
+
+    setLoading(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const response = await axios.post(
+        "https://d17qozs0vubb7e.cloudfront.net/api/students/login",
+        form
+      );
+
+      setSuccess("Login successful!");
+      console.log("API Response:", response.data);
+    } catch (err) {
+      setError(err.response?.data?.message || "Something went wrong.");
+    } finally {
+      setLoading(false);
     }
   };
 
