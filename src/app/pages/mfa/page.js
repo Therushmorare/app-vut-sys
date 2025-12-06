@@ -1,3 +1,5 @@
+"use client";
+
 import { useRouter } from "next/router";
 import MFA from "../../components/auth/Mfa";
 
