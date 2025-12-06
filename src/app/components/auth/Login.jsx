@@ -4,6 +4,8 @@ import { useState } from "react";
 import axios from "axios";
 import { GraduationCap, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { COLORS } from "../../constants/colors";
+import { useRouter } from "next/navigation";
+
 
 const Login = ({ onLogin, onSwitchToRegister }) => {
   const [formData, setFormData] = useState({
@@ -32,6 +34,8 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
+  const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -75,6 +79,8 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
       console.log("API Response:", response.data);
 
       if (onLogin) onLogin(response.data);
+      router.push("/mfa"); 
+
     } catch (err) {
       console.error("Login error:", err);
       setApiError(err.response?.data?.message || "Something went wrong.");
