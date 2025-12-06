@@ -47,7 +47,7 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
       const payload = {
         user_type: "student",
         email: formData.email.trim(), // must be valid
-        id_number: null,              // always include key
+        id_number: "",              // always include key
         password: formData.password,
       };
 
