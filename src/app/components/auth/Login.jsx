@@ -12,23 +12,17 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
-
-  // New states for API tracking
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState("");
   const [apiSuccess, setApiSuccess] = useState("");
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: "" }));
-    }
+    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
   const validateForm = () => {
     const newErrors = {};
-
     if (!formData.email.trim()) newErrors.email = "Email is required";
     else if (!/\S+@\S+\.\S+/.test(formData.email))
       newErrors.email = "Email is invalid";
@@ -49,32 +43,40 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
     setApiSuccess("");
 
     try {
+      // Prepare payload exactly as API expects
       const payload = {
         user_type: "student",
-        email: formData.email,
+        email: formData.email.trim(), // must be valid
+        id_number: null,              // always include key
         password: formData.password,
-        id_number: null,
       };
+
+      console.log("Sending payload:", payload);
 
       const response = await axios.post(
         "https://d17qozs0vubb7e.cloudfront.net/api/students/login",
-        payload
+        payload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
       );
 
       const { message, user_type, user_id, access_token } = response.data;
 
-      // Save session
+      // Save session data
       sessionStorage.setItem("access_token", access_token);
       sessionStorage.setItem("user_type", user_type);
       sessionStorage.setItem("user_id", user_id);
 
-      setApiSuccess("Login successful! Proceed to MFA verification.");
+      setApiSuccess(message || "Login successful!");
 
       console.log("API Response:", response.data);
 
       if (onLogin) onLogin(response.data);
-
     } catch (err) {
+      console.error("Login error:", err);
       setApiError(err.response?.data?.message || "Something went wrong.");
     } finally {
       setLoading(false);
@@ -107,19 +109,24 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
         </div>
 
         {apiError && (
-          <p className="mb-4 text-center text-sm font-medium" style={{ color: COLORS.danger }}>
+          <p
+            className="mb-4 text-center text-sm font-medium"
+            style={{ color: COLORS.danger }}
+          >
             {apiError}
           </p>
         )}
 
         {apiSuccess && (
-          <p className="mb-4 text-center text-sm font-medium" style={{ color: COLORS.success }}>
+          <p
+            className="mb-4 text-center text-sm font-medium"
+            style={{ color: COLORS.success }}
+          >
             {apiSuccess}
           </p>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-
           {/* Email */}
           <div>
             <label className="block text-sm font-medium mb-2 text-gray-700">
@@ -161,7 +168,6 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
                   borderColor: errors.password ? COLORS.danger : COLORS.border,
                 }}
               />
-
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
@@ -187,7 +193,6 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
               <input type="checkbox" className="mr-2" />
               <span className="text-sm text-gray-600">Remember me</span>
             </label>
-
             <button
               type="button"
               className="text-sm"
