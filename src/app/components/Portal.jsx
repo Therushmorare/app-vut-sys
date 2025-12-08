@@ -18,7 +18,7 @@ export default function StudentPortal() {
 
   // \u2705 Check if user is logged in
   useEffect(() => {
-    const savedUser = localStorage.getItem("user_id");
+    const savedUser = sessionStorage.getItem("user_id");
 
     if (!savedUser) {
       router.push("/login");
@@ -28,7 +28,7 @@ export default function StudentPortal() {
   }, [router]);
 
   const handleLogout = () => {
-    localStorage.removeItem("user_id");
+    sessionStorage.removeItem("user_id");
     router.push("/login");
   };
 
