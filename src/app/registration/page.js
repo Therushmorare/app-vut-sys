@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation"; //next/navigation
 import Registration from "../components/auth/Registration";
 
 export default function RegistrationPage() {
