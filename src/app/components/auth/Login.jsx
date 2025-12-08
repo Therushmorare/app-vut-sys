@@ -79,7 +79,7 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
       console.log("API Response:", response.data);
 
       if (onLogin) onLogin(response.data);
-      router.push("/mfa"); 
+      router.push("/dashboard"); 
 
     } catch (err) {
       console.error("Login error:", err);
