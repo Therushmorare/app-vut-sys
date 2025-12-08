@@ -14,10 +14,18 @@ export default function LoginPage() {
   };
 
   const switchToRegister = () => {
-    router.push("/registration"); // your registration page path
+    router.push("/registration");
+  };
+
+  const switchToForgotPassword = () => {
+    router.push("/forgot");
   };
 
   return (
-    <Login onLogin={handleLogin} onSwitchToRegister={switchToRegister} />
+    <Login
+      onLogin={handleLogin}
+      onSwitchToRegister={switchToRegister}
+      onSwitchToForgotPassword={switchToForgotPassword}
+    />
   );
 }

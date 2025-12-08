@@ -201,6 +201,7 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
             </label>
             <button
               type="button"
+              onClick={() => router.push("/forgot")}
               className="text-sm"
               style={{ color: COLORS.primary }}
             >
