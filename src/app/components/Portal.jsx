@@ -35,7 +35,7 @@ export default function StudentPortal() {
     setView('portal');
   };
 
-  const handleLogin = (formData) => {
+  {/*const handleLogin = (formData) => {
     const user = registeredUsers.find(u => u.email === formData.email);
     
     if (user) {
@@ -44,7 +44,7 @@ export default function StudentPortal() {
     } else {
       alert('Invalid credentials. Please register first.');
     }
-  };
+  };*/}
 
   const handleLogout = () => {
     setCurrentStudent(null);
