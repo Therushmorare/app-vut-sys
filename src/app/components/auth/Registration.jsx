@@ -99,7 +99,7 @@ const Registration = ({ onRegister, onSwitchToLogin }) => {
       setApiSuccess(message || "Signup successful!");
       if (onRegister) onRegister(response.data);
 
-      router.push("/verify");
+      router.push("/verification");
     } catch (err) {
       console.error("Signup error:", err);
       setApiError(err.response?.data?.message || "Something went wrong.");
