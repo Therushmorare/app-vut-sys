@@ -1,7 +1,7 @@
 "use client"
 
-import StudentPortal from '../../components/Portal';
-import { StudentProvider } from '../../constants/context';
+import StudentPortal from '../components/Portal';
+import { StudentProvider } from '../constants/context';
 
 // Mock initial student data - replace with your actual data fetching
 const mockStudent = {

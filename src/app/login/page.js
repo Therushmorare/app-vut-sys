@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/router";
-import Login from "../../components/auth/Login";
+import Login from "../components/auth/Login";
 
 export default function LoginPage() {
   const router = useRouter();

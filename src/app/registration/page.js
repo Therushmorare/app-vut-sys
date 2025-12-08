@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/router";
-import Registration from "../../components/auth/Registration";
+import Registration from "../components/auth/Registration";
 
 export default function RegistrationPage() {
   const router = useRouter();
