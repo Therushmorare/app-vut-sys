@@ -199,10 +199,11 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
               <input type="checkbox" className="mr-2" />
               <span className="text-sm text-gray-600">Remember me</span>
             </label>
+            
             <button
               type="button"
               onClick={() => router.push("/forgot")}
-              className="text-sm"
+              className="text-sm ml-4"  // add margin-left
               style={{ color: COLORS.primary }}
             >
               Forgot password?
