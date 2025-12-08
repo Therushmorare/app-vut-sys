@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation"; // ✅ use next/navigation
 import Login from "../components/auth/Login";
 
 export default function LoginPage() {
@@ -14,7 +14,7 @@ export default function LoginPage() {
   };
 
   const switchToRegister = () => {
-    router.push("/register"); // if you have a register page
+    router.push("/registration"); // your registration page path
   };
 
   return (
