@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/router";
-import Verify from "../../components/auth/Verify";
+import Verify from "../components/auth/Verify";
 
 export default function MFAPage() {
   const router = useRouter();
