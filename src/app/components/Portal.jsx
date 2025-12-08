@@ -28,7 +28,7 @@ export default function StudentPortal() {
   }, [router]);
 
   const handleLogout = () => {
-    localStorage.removeItem("student");
+    localStorage.removeItem("user_id");
     router.push("/login");
   };
 
