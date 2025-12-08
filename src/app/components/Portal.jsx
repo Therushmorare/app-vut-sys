@@ -16,7 +16,7 @@ export default function StudentPortal() {
   const [currentStudent, setCurrentStudent] = useState(null);
   const [activeView, setActiveView] = useState("dashboard");
 
-  // Check if user is logged in
+  // \u2705 Check if user is logged in
   useEffect(() => {
     const savedUser = localStorage.getItem("user_id");
 
@@ -39,7 +39,7 @@ export default function StudentPortal() {
     { id: "notifications", label: "Notifications", icon: Bell },
   ];
 
-  // Prevent UI from flashing before loading student
+  // \u26d4 Prevent UI from flashing before loading student
   if (!currentStudent) return null;
 
   return (
