@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation"; //next/navigation
 import Verify from "../components/auth/Verify";
 
 export default function MFAPage() {
