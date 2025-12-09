@@ -72,11 +72,6 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
       // Fetch student full profile
       const profileRes = await axios.get(
         `https://d17qozs0vubb7e.cloudfront.net/api/students/student/${user_id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${access_token}`,
-          },
-        }
       );
 
       const student = profileRes.data;
