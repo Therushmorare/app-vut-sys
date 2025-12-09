@@ -6,8 +6,9 @@ import { GraduationCap, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { COLORS } from "../../constants/colors";
 import { useRouter } from "next/navigation";
 
-
 const Login = ({ onLogin, onSwitchToRegister }) => {
+  const router = useRouter();
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -35,11 +36,8 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const router = useRouter();
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!validateForm()) return;
 
     setLoading(true);
@@ -47,39 +45,61 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
     setApiSuccess("");
 
     try {
-      // Prepare payload exactly as API expects
+      // Login request
       const payload = {
         user_type: "student",
-        email: formData.email.trim(), // must be valid
-        id_number: "",              // always include key
+        email: formData.email.trim(),
+        id_number: "",
         password: formData.password,
       };
-
-      console.log("Sending payload:", payload);
 
       const response = await axios.post(
         "https://d17qozs0vubb7e.cloudfront.net/api/students/login",
         payload,
         {
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
         }
       );
 
-      const { message, user_type, user_id, access_token } = response.data;
+      const { message, user_id, access_token } = response.data;
 
-      // Save session data
+      // Save basic auth details
       sessionStorage.setItem("access_token", access_token);
-      sessionStorage.setItem("user_type", user_type);
       sessionStorage.setItem("user_id", user_id);
 
       setApiSuccess(message || "Login successful!");
 
-      console.log("API Response:", response.data);
+      // Fetch student full profile
+      const profileRes = await axios.get(
+        `https://d17qozs0vubb7e.cloudfront.net/api/students/student/${user_id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${access_token}`,
+          },
+        }
+      );
 
-      if (onLogin) onLogin(response.data);
-      router.push("/dashboard"); 
+      const student = profileRes.data;
+
+      // Map API snake_case → camelCase
+      const mappedStudent = {
+        id: student.id,
+        firstName: student.first_name,
+        lastName: student.last_name,
+        email: student.email,
+        phone: student.phone,
+        idNumber: student.id_number,
+        faculty: student.faculty,
+        programme: student.programme,
+      };
+
+      // Store full student object
+      sessionStorage.setItem("student", JSON.stringify(mappedStudent));
+
+      if (onLogin) onLogin(mappedStudent);
+
+      // Redirect
+      router.push("/dashboard");
 
     } catch (err) {
       console.error("Login error:", err);
@@ -99,12 +119,10 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
         style={{ backgroundColor: COLORS.bgWhite }}
       >
         <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <GraduationCap
-              className="w-16 h-16"
-              style={{ color: COLORS.primary }}
-            />
-          </div>
+          <GraduationCap
+            className="w-16 h-16 mx-auto mb-4"
+            style={{ color: COLORS.primary }}
+          />
           <h1
             className="text-3xl font-bold mb-2"
             style={{ color: COLORS.primary }}
@@ -115,19 +133,13 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
         </div>
 
         {apiError && (
-          <p
-            className="mb-4 text-center text-sm font-medium"
-            style={{ color: COLORS.danger }}
-          >
+          <p className="mb-4 text-center text-sm font-medium" style={{ color: COLORS.danger }}>
             {apiError}
           </p>
         )}
 
         {apiSuccess && (
-          <p
-            className="mb-4 text-center text-sm font-medium"
-            style={{ color: COLORS.success }}
-          >
+          <p className="mb-4 text-center text-sm font-medium" style={{ color: COLORS.success }}>
             {apiSuccess}
           </p>
         )}
@@ -139,16 +151,14 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
               Email Address
             </label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleChange("email", e.target.value)}
                 placeholder="your.email@university.ac.za"
-                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
-                style={{
-                  borderColor: errors.email ? COLORS.danger : COLORS.border,
-                }}
+                className="w-full pl-10 pr-4 py-2 border rounded-lg"
+                style={{ borderColor: errors.email ? COLORS.danger : COLORS.border }}
               />
             </div>
             {errors.email && (
@@ -164,20 +174,19 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
               Password
             </label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type={showPassword ? "text" : "password"}
                 value={formData.password}
                 onChange={(e) => handleChange("password", e.target.value)}
-                className="w-full pl-10 pr-10 py-2 border rounded-lg focus:outline-none focus:ring-2"
-                style={{
-                  borderColor: errors.password ? COLORS.danger : COLORS.border,
-                }}
+                className="w-full pl-10 pr-10 py-2 border rounded-lg"
+                style={{ borderColor: errors.password ? COLORS.danger : COLORS.border }}
               />
+
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                className="absolute right-3 top-1/2 -translate-y-1/2"
               >
                 {showPassword ? (
                   <EyeOff className="w-5 h-5 text-gray-400" />
@@ -193,17 +202,17 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
             )}
           </div>
 
-          {/* Remember me + Forgot password */}
+          {/* Remember + Forgot */}
           <div className="flex items-center justify-between">
             <label className="flex items-center">
               <input type="checkbox" className="mr-2" />
               <span className="text-sm text-gray-600">Remember me</span>
             </label>
-            
+
             <button
               type="button"
               onClick={() => router.push("/forgot")}
-              className="text-sm ml-4"  // add margin-left
+              className="text-sm ml-4"
               style={{ color: COLORS.primary }}
             >
               Forgot password?
@@ -214,7 +223,7 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-lg text-white font-semibold hover:opacity-90 transition-opacity"
+            className="w-full py-3 rounded-lg text-white font-semibold hover:opacity-90"
             style={{ backgroundColor: COLORS.primary }}
           >
             {loading ? "Logging in..." : "Login"}
