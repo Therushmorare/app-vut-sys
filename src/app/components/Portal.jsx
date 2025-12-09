@@ -16,19 +16,26 @@ export default function StudentPortal() {
   const [currentStudent, setCurrentStudent] = useState(null);
   const [activeView, setActiveView] = useState("dashboard");
 
-  // \u2705 Check if user is logged in
+  //Load student from sessionStorage
   useEffect(() => {
-    const savedUser = sessionStorage.getItem("user_id");
+    const savedStudent = sessionStorage.getItem("student");
 
-    if (!savedUser) {
-      router.push("/login");
+    if (!savedStudent) {
+      router.push("/login"); // Not logged in
     } else {
-      setCurrentStudent(JSON.parse(savedUser));
+      try {
+        setCurrentStudent(JSON.parse(savedStudent));
+      } catch (error) {
+        console.error("Invalid JSON in sessionStorage:", error);
+        sessionStorage.removeItem("student");
+        router.push("/login");
+      }
     }
   }, [router]);
 
+  //Logout removes correct key
   const handleLogout = () => {
-    sessionStorage.removeItem("user_id");
+    sessionStorage.removeItem("student");
     router.push("/login");
   };
 
@@ -39,12 +46,16 @@ export default function StudentPortal() {
     { id: "notifications", label: "Notifications", icon: Bell },
   ];
 
-  // \u26d4 Prevent UI from flashing before loading student
+  //Prevent UI from flashing before loading student
   if (!currentStudent) return null;
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: COLORS.bgLight }}>
-      <Header student={currentStudent} onLogout={handleLogout} onNavigate={setActiveView} />
+      <Header
+        student={currentStudent}
+        onLogout={handleLogout}
+        onNavigate={setActiveView}
+      />
 
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="mb-6 overflow-x-auto">
@@ -56,9 +67,14 @@ export default function StudentPortal() {
                   key={item.id}
                   onClick={() => setActiveView(item.id)}
                   className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors ${
-                    activeView === item.id ? "text-white" : "text-gray-600 hover:bg-gray-100"
+                    activeView === item.id
+                      ? "text-white"
+                      : "text-gray-600 hover:bg-gray-100"
                   }`}
-                  style={{ backgroundColor: activeView === item.id ? COLORS.primary : COLORS.bgWhite }}
+                  style={{
+                    backgroundColor:
+                      activeView === item.id ? COLORS.primary : COLORS.bgWhite,
+                  }}
                 >
                   <Icon className="w-5 h-5" />
                   <span>{item.label}</span>
@@ -69,15 +85,23 @@ export default function StudentPortal() {
         </div>
 
         <div>
-          {activeView === "dashboard" && <Dashboard student={currentStudent} onNavigate={setActiveView} />}
+          {activeView === "dashboard" && (
+            <Dashboard student={currentStudent} onNavigate={setActiveView} />
+          )}
           {activeView === "profile" && <Profile student={currentStudent} />}
           {activeView === "documents" && (
-            <div className="rounded-lg p-8 shadow-sm text-center" style={{ backgroundColor: COLORS.bgWhite }}>
+            <div
+              className="rounded-lg p-8 shadow-sm text-center"
+              style={{ backgroundColor: COLORS.bgWhite }}
+            >
               <DocumentUpload student={currentStudent} />
             </div>
           )}
           {activeView === "notifications" && (
-            <div className="rounded-lg p-8 shadow-sm text-center" style={{ backgroundColor: COLORS.bgWhite }}>
+            <div
+              className="rounded-lg p-8 shadow-sm text-center"
+              style={{ backgroundColor: COLORS.bgWhite }}
+            >
               <Notifications student={currentStudent} />
             </div>
           )}
