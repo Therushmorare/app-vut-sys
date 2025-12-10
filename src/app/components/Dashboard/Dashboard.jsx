@@ -111,21 +111,35 @@ const StudentDashboard = ({ student, onNavigate }) => {
             <h3 className="font-semibold" style={{ color: COLORS.text }}>Documents</h3>
             <FileText className="w-5 h-5" style={{ color: COLORS.info }} />
           </div>
-          <p className="text-3xl font-bold mb-2" style={{ color: COLORS.primary }}>
-            {student.uploadedCount || 0}/{student.totalRequired || 5}
-          </p>
-          <p className="text-sm text-gray-600">
-            {student.documentsComplete ? 'All verified' : 'Upload required'}
-          </p>
-          {!student.documentsComplete && (
-            <button
-              onClick={() => onNavigate('documents')}
-              className="mt-3 w-full px-4 py-2 rounded-lg text-white font-medium"
-              style={{ backgroundColor: COLORS.info }}
-            >
-              Upload Now
-            </button>
-          )}
+
+          {/* Compute counts dynamically */}
+          {(() => {
+            const totalRequired = student.requiredDocuments?.length || 5;
+            const uploadedCount = student.requiredDocuments
+              ? student.requiredDocuments.filter(doc => doc.uploaded).length
+              : 0;
+            const documentsComplete = uploadedCount === totalRequired;
+
+            return (
+              <>
+                <p className="text-3xl font-bold mb-2" style={{ color: COLORS.primary }}>
+                  {uploadedCount}/{totalRequired}
+                </p>
+                <p className="text-sm text-gray-600">
+                  {documentsComplete ? 'All verified' : 'Upload required'}
+                </p>
+                {!documentsComplete && (
+                  <button
+                    onClick={() => onNavigate('documents')}
+                    className="mt-3 w-full px-4 py-2 rounded-lg text-white font-medium"
+                    style={{ backgroundColor: COLORS.info }}
+                  >
+                    Upload Now
+                  </button>
+                )}
+              </>
+            );
+          })()}
         </div>
 
         <div className="rounded-lg p-6 shadow-sm" style={{ backgroundColor: COLORS.bgWhite }}>
