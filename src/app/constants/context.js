@@ -1,7 +1,6 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect } from 'react';
-import { useToast } from "./ToastContext";
 
 const StudentContext = createContext();
 
@@ -157,6 +156,14 @@ export function StudentProvider({ children, initialStudent }) {
         notif.id === notificationId ? { ...notif, read: true } : notif
       )
     }));
+  };
+
+  const showToast = (message, type = "success") => {
+    console.log(`[TOAST - ${type}] ${message}`);
+    if (typeof window !== "undefined") {
+      const event = new CustomEvent("show-toast", { detail: { message, type } });
+      window.dispatchEvent(event);
+    }
   };
 
   return (
