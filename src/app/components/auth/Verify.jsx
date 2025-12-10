@@ -31,7 +31,7 @@ export default function Verify({ onVerify }) {
       const payload = { mfa_code: form.mfa_code.trim() };
 
       const response = await axios.post(
-        "https://seta-management-api-5zwfv.ondigitalocean.app/api/students/verify-token",
+        "https://seta-management-api-fvzc9.ondigitalocean.app/api/students/verify-token",
         payload,
         { headers: { "Content-Type": "application/json" } }
       );

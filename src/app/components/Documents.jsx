@@ -88,7 +88,7 @@ const handleUpload = async (key) => {
 
   try {
     const res = await fetch(
-      "https://seta-management-api-5zwfv.ondigitalocean.app/api/students/upload/supporting-documents",
+      "https://seta-management-api-fvzc9.ondigitalocean.app/api/students/upload/supporting-documents",
       {
         method: "POST",
         body: formData,
