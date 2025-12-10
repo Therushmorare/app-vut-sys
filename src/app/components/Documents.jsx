@@ -1,15 +1,15 @@
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FileText, GraduationCap, Award, Building2, Upload, Download, Calendar, DollarSign, Eye, CheckCircle, AlertTriangle } from 'lucide-react';
 import { COLORS } from '../constants/colors';
 import { formatDate } from '../utils/date';
 import { useStudent } from '../constants/context';
 
-
 const DocumentUpload = () => {
-  const { student, uploadDocument, signAgreement, showToast } = useStudent();
+  const { student, signAgreement, showToast } = useStudent();
   const [selectedFiles, setSelectedFiles] = useState({});
+  const [uploadedDocs, setUploadedDocs] = useState({});
 
   const requiredDocuments = [
     { key: 'idDocument', label: 'ID Document / Passport', icon: FileText, required: true },
@@ -40,11 +40,48 @@ const DocumentUpload = () => {
     }
   ];
 
-  const uploadedDocs = student.uploadedDocuments || {};
+  // Fetch all uploaded documents from API
+  const loadUploadedDocs = async () => {
+    if (!student?.id) return;
+
+    try {
+      const res = await fetch(
+        `https://seta-management-api-fvzc9.ondigitalocean.app/api/students/documents/${student.id}`
+      );
+
+      if (!res.ok) {
+        console.error("Failed to load documents");
+        return;
+      }
+
+      const data = await res.json();
+
+      // Transform API list → grouped by doc_type
+      const grouped = {};
+      (data.documents || []).forEach((doc) => {
+        if (!grouped[doc.doc_type]) grouped[doc.doc_type] = [];
+        grouped[doc.doc_type].push({
+          name: doc.document.split("/").pop(),
+          url: doc.document,
+          status: "Pending Verification",
+          uploadDate: new Date().toISOString()
+        });
+      });
+
+      setUploadedDocs(grouped);
+
+    } catch (err) {
+      console.error("Document load error:", err);
+    }
+  };
+
+  useEffect(() => {
+    loadUploadedDocs();
+  }, [student]);
 
   const totalRequired = requiredDocuments.length;
-  const uploadedCount = requiredDocuments.filter(doc => uploadedDocs[doc.key]).length;
-  const verifiedCount = requiredDocuments.filter(doc => uploadedDocs[doc.key]?.status === 'Verified').length;
+  const uploadedCount = requiredDocuments.filter(doc => uploadedDocs[doc.key]?.length).length;
+  const verifiedCount = requiredDocuments.filter(doc => uploadedDocs[doc.key]?.some(d => d.status === 'Verified')).length;
 
   const handleFileSelect = (key, event) => {
     const file = event.target.files[0];
@@ -64,76 +101,66 @@ const DocumentUpload = () => {
     }
   };
 
-const handleUpload = async (key) => {
-  if (!selectedFiles[key]) return;
+  const handleUpload = async (key) => {
+    if (!selectedFiles[key]) return;
 
-  const file = selectedFiles[key];
+    const file = selectedFiles[key];
 
-  // Validate file size and type
-  if (file.size > 5 * 1024 * 1024) {
-    showToast("File size must be less than 5MB", "error");
-    return;
-  }
+    const formData = new FormData();
+    formData.append("user_id", student.id);
+    formData.append("document_type", key);
+    formData.append("file", file);
 
-  const validTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
-  if (!validTypes.includes(file.type)) {
-    showToast("Only PDF, JPG, and PNG files are allowed", "error");
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append("user_id", student.id);
-  formData.append("document_type", key);
-  formData.append("file", file);
-
-  try {
-    const res = await fetch(
-      "https://seta-management-api-fvzc9.ondigitalocean.app/api/students/upload/supporting-documents",
-      {
-        method: "POST",
-        body: formData,
-      }
-    );
-
-    // Always read as text first
-    const text = await res.text();
-
-    // Try to parse JSON
-    let data;
     try {
-      data = JSON.parse(text);
-    } catch {
-      console.error("Invalid JSON response from server:", text);
-      showToast("Upload failed: invalid server response", "error");
-      return;
-    }
-
-    if (res.ok) {
-      uploadDocument(
-        key,
-        data.files.map((url) => ({
-          name: url.split("/").pop(),
-          url,
-          status: "Pending Verification",
-          uploadDate: new Date().toISOString(),
-        }))
+      const res = await fetch(
+        "https://seta-management-api-fvzc9.ondigitalocean.app/api/students/upload/supporting-documents",
+        {
+          method: "POST",
+          body: formData,
+        }
       );
 
-      showToast(`Uploaded ${data.uploaded_count || 1} document(s) for ${key}`, "success");
+      const text = await res.text();
 
-      setSelectedFiles((prev) => {
-        const updated = { ...prev };
-        delete updated[key];
-        return updated;
-      });
-    } else {
-      showToast(data.message || "Upload failed", "error");
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        console.error("Invalid JSON response from server:", text);
+        showToast("Upload failed: invalid server response", "error");
+        return;
+      }
+
+      if (res.ok) {
+        // Append uploaded files to state
+        setUploadedDocs(prev => ({
+          ...prev,
+          [key]: [
+            ...(prev[key] || []),
+            ...data.files.map(url => ({
+              name: url.split("/").pop(),
+              url,
+              status: "Pending Verification",
+              uploadDate: new Date().toISOString()
+            }))
+          ]
+        }));
+
+        showToast(`Uploaded ${data.uploaded_count || 1} document(s) for ${key}`, "success");
+
+        setSelectedFiles(prev => {
+          const updated = { ...prev };
+          delete updated[key];
+          return updated;
+        });
+      } else {
+        showToast(data.message || "Upload failed", "error");
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      showToast("Error uploading document. Try again.", "error");
     }
-  } catch (error) {
-    console.error("Upload error:", error);
-    showToast("Error uploading document. Try again.", "error");
-  }
-};
+  };
 
   const handleDownload = (key, companyName) => {
     showToast(`Downloading ${companyName || ''} agreement...`, 'success');
@@ -201,9 +228,7 @@ const handleUpload = async (key) => {
         <div className="space-y-4">
           {requiredDocuments.map(doc => {
             const Icon = doc.icon;
-            const uploaded = Array.isArray(uploadedDocs[doc.key])
-              ? uploadedDocs[doc.key][0]
-              : uploadedDocs[doc.key];
+            const uploaded = uploadedDocs[doc.key] || [];
             const selected = selectedFiles[doc.key];
 
             return (
@@ -224,39 +249,24 @@ const handleUpload = async (key) => {
                       )}
                     </div>
 
-                    {uploaded ? (
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <CheckCircle className="w-4 h-4" style={{ color: COLORS.success }} />
-                          <span className="text-sm text-gray-600">{uploaded.name}</span>
-                          <span className={`text-xs px-2 py-1 rounded-full ${getStatusBadge(uploaded.status)}`}>
-                            {uploaded.status}
-                          </span>
-                        </div>
-                        <p className="text-xs text-gray-500">
-                          Uploaded: {formatDate(uploaded.uploadDate)}
-                        </p>
-                        {uploaded.status === 'Rejected' && (
-                          <div className="mt-2">
-                            <p className="text-sm text-red-600 mb-2">Document rejected. Please upload a new one.</p>
-                            <input
-                              type="file"
-                              id={`reupload-${doc.key}`}
-                              accept=".pdf,.jpg,.jpeg,.png"
-                              onChange={(e) => handleFileSelect(doc.key, e)}
-                              className="hidden"
-                            />
-                            <label
-                              htmlFor={`reupload-${doc.key}`}
-                              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 cursor-pointer"
-                              style={{ backgroundColor: COLORS.danger }}
-                            >
-                              <Upload className="w-4 h-4" />
-                              Re-upload
-                            </label>
+                    {/* Display uploaded files */}
+                    {uploaded.length ? (
+                      uploaded.map((file, index) => (
+                        <div key={index} className="space-y-2 mb-2">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="w-4 h-4" style={{ color: COLORS.success }} />
+                            <a href={file.url} target="_blank" rel="noreferrer" className="text-sm text-blue-600 underline">
+                              {file.name}
+                            </a>
+                            <span className={`text-xs px-2 py-1 rounded-full ${getStatusBadge(file.status)}`}>
+                              {file.status}
+                            </span>
                           </div>
-                        )}
-                      </div>
+                          <p className="text-xs text-gray-500">
+                            Uploaded: {formatDate(file.uploadDate)}
+                          </p>
+                        </div>
+                      ))
                     ) : selected ? (
                       <div className="flex items-center gap-3">
                         <span className="text-sm text-gray-600">{selected.name}</span>
@@ -324,7 +334,7 @@ const handleUpload = async (key) => {
         <div className="space-y-4">
           {agreementDocuments.map(doc => {
             const Icon = doc.icon;
-            const uploaded = uploadedDocs[doc.key];
+            const uploaded = uploadedDocs[doc.key]?.[0];
 
             if (!doc.available) {
               return (
@@ -408,63 +418,6 @@ const handleUpload = async (key) => {
           })}
         </div>
       </div>
-
-      {/* Timesheets & Payslips - Only show if placement is active */}
-      {student.placement && student.placementAgreementSigned && (
-        <div className="rounded-lg p-6 shadow-sm" style={{ backgroundColor: COLORS.bgWhite }}>
-          <h2 className="text-xl font-bold mb-4" style={{ color: COLORS.primary }}>
-            Timesheets & Payslips
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="border rounded-lg p-4" style={{ borderColor: COLORS.border }}>
-              <div className="flex items-center gap-3 mb-3">
-                <Calendar className="w-6 h-6" style={{ color: COLORS.info }} />
-                <h3 className="font-semibold" style={{ color: COLORS.primary }}>
-                  Monthly Timesheet
-                </h3>
-              </div>
-              <p className="text-sm text-gray-600 mb-4">
-                Download, complete, and upload your monthly timesheet.
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => showToast('Timesheet template downloaded', 'success')}
-                  className="px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 border"
-                  style={{ color: COLORS.text, borderColor: COLORS.border }}
-                >
-                  <Download className="w-4 h-4 inline mr-2" />
-                  Download Template
-                </button>
-                <label className="px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 cursor-pointer" style={{ backgroundColor: COLORS.info }}>
-                  <Upload className="w-4 h-4 inline mr-2" />
-                  Upload
-                  <input type="file" className="hidden" accept=".pdf" />
-                </label>
-              </div>
-            </div>
-
-            <div className="border rounded-lg p-4" style={{ borderColor: COLORS.border }}>
-              <div className="flex items-center gap-3 mb-3">
-                <DollarSign className="w-6 h-6" style={{ color: COLORS.success }} />
-                <h3 className="font-semibold" style={{ color: COLORS.primary }}>
-                  Payslips
-                </h3>
-              </div>
-              <p className="text-sm text-gray-600 mb-4">
-                View and download your monthly payslips.
-              </p>
-              <button
-                onClick={() => showToast('Viewing payslip history', 'success')}
-                className="px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90"
-                style={{ backgroundColor: COLORS.success }}
-              >
-                <Eye className="w-4 h-4 inline mr-2" />
-                View Payslips
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
