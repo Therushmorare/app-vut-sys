@@ -25,9 +25,7 @@ export default function Verify({ onVerify }) {
       return;
     }
 
-    const stored = sessionStorage.getItem("student");
-    const student = stored ? JSON.parse(stored) : null;
-    const email = student?.email;
+    const email = sessionStorage.getItem("email")
 
     if (!email) {
       setError("Cannot verify: No email found in session.");
