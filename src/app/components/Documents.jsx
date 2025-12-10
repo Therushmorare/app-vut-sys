@@ -69,7 +69,7 @@ const DocumentUpload = () => {
 
     const file = selectedFiles[key];
 
-    // Validate file size and type again just in case
+    // Validate file size and type
     if (file.size > 5 * 1024 * 1024) {
       showToast("File size must be less than 5MB", "error");
       return;
@@ -91,16 +91,17 @@ const DocumentUpload = () => {
         "https://d17qozs0vubb7e.cloudfront.net/api/students/upload/supporting-documents",
         {
           method: "POST",
-          body: formData, // FormData handles the headers automatically
+          body: formData, // FormData handles headers
         }
       );
 
-      // Safely parse JSON
+      // Read as text first
+      const text = await res.text();
+
       let data;
       try {
-        data = await res.json();
+        data = JSON.parse(text);
       } catch (err) {
-        const text = await res.text();
         console.error("Invalid JSON response from server:", text);
         showToast("Upload failed: invalid server response", "error");
         return;
