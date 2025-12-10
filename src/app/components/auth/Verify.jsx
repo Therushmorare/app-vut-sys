@@ -25,18 +25,10 @@ export default function Verify({ onVerify }) {
       return;
     }
 
-    if (!form.email?.trim()) {
-      setError("Email is required");
-      return;
-    }
-
     setLoading(true);
 
     try {
-      const payload = {
-        email: form.email.trim(),
-        token: form.mfa_code.trim()
-      };
+      const payload = { mfa_code: form.mfa_code.trim() };
 
       const response = await axios.post(
         "https://seta-management-api-fvzc9.ondigitalocean.app/api/students/verify-token",
