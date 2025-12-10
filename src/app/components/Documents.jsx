@@ -88,19 +88,21 @@ const handleUpload = async (key) => {
 
   try {
     const res = await fetch(
-      "https://d17qozs0vubb7e.cloudfront.net/api/students/upload/supporting-documents",
+      "https://seta-management-api-5zwfv.ondigitalocean.app/api/students/upload/supporting-documents",
       {
         method: "POST",
-        body: formData, // FormData handles headers automatically
+        body: formData,
       }
     );
 
-    // Safely parse JSON or catch HTML errors
+    // Always read as text first
+    const text = await res.text();
+
+    // Try to parse JSON
     let data;
     try {
-      data = await res.json();
-    } catch (err) {
-      const text = await res.text();
+      data = JSON.parse(text);
+    } catch {
       console.error("Invalid JSON response from server:", text);
       showToast("Upload failed: invalid server response", "error");
       return;

@@ -54,7 +54,7 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
       };
 
       const response = await axios.post(
-        "https://d17qozs0vubb7e.cloudfront.net/api/students/login",
+        "https://seta-management-api-5zwfv.ondigitalocean.app/api/students/login",
         payload,
         {
           headers: { "Content-Type": "application/json" },
@@ -71,7 +71,7 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
 
       // Fetch student full profile
       const profileRes = await axios.get(
-        `https://d17qozs0vubb7e.cloudfront.net/api/students/student/${user_id}`,
+        `https://seta-management-api-5zwfv.ondigitalocean.app/api/students/student/${user_id}`,
       );
 
       const student = profileRes.data;
