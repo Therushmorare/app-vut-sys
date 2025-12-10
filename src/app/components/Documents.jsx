@@ -64,75 +64,77 @@ const DocumentUpload = () => {
     }
   };
 
-  const handleUpload = async (key) => {
-    if (!selectedFiles[key]) return;
+const handleUpload = async (key) => {
+  if (!selectedFiles[key]) return;
 
-    const file = selectedFiles[key];
+  const file = selectedFiles[key];
 
-    // Validate file size and type
-    if (file.size > 5 * 1024 * 1024) {
-      showToast("File size must be less than 5MB", "error");
-      return;
-    }
+  // Validate file size and type
+  if (file.size > 5 * 1024 * 1024) {
+    showToast("File size must be less than 5MB", "error");
+    return;
+  }
 
-    const validTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
-    if (!validTypes.includes(file.type)) {
-      showToast("Only PDF, JPG, and PNG files are allowed", "error");
-      return;
-    }
+  const validTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
+  if (!validTypes.includes(file.type)) {
+    showToast("Only PDF, JPG, and PNG files are allowed", "error");
+    return;
+  }
 
-    const formData = new FormData();
-    formData.append("user_id", student.id);
-    formData.append("document_type", key);
-    formData.append("file", file);
+  const formData = new FormData();
+  formData.append("user_id", student.id);
+  formData.append("document_type", key);
+  formData.append("file", file);
 
+  try {
+    const res = await fetch(
+      "https://d17qozs0vubb7e.cloudfront.net/api/students/upload/supporting-documents",
+      {
+        method: "POST",
+        body: formData,
+        // Optional: add Authorization if your backend requires it
+        // headers: { Authorization: `Bearer ${student.token}` },
+      }
+    );
+
+    const text = await res.text();
+
+    // Check if response is JSON or HTML
+    let data;
     try {
-      const res = await fetch(
-        "https://d17qozs0vubb7e.cloudfront.net/api/students/upload/supporting-documents",
-        {
-          method: "POST",
-          body: formData, // FormData handles headers
-        }
+      data = JSON.parse(text);
+    } catch {
+      console.error("Invalid JSON response from server:", text);
+      showToast("Upload failed: invalid server response", "error");
+      return;
+    }
+
+    if (res.ok) {
+      uploadDocument(
+        key,
+        data.files.map((url) => ({
+          name: url.split("/").pop(),
+          url,
+          status: "Pending Verification",
+          uploadDate: new Date().toISOString(),
+        }))
       );
 
-      // Read as text first
-      const text = await res.text();
+      showToast(`Uploaded ${data.uploaded_count || 1} document(s) for ${key}`, "success");
 
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch (err) {
-        console.error("Invalid JSON response from server:", text);
-        showToast("Upload failed: invalid server response", "error");
-        return;
-      }
-
-      if (res.ok) {
-        uploadDocument(
-          key,
-          data.files.map((url) => ({
-            name: url.split("/").pop(),
-            url,
-            status: "Pending Verification",
-            uploadDate: new Date().toISOString(),
-          }))
-        );
-
-        showToast(`Uploaded ${data.uploaded_count || 1} document(s) for ${key}`, "success");
-
-        setSelectedFiles((prev) => {
-          const updated = { ...prev };
-          delete updated[key];
-          return updated;
-        });
-      } else {
-        showToast(data.message || "Upload failed", "error");
-      }
-    } catch (error) {
-      console.error("Upload error:", error);
-      showToast("Error uploading document. Try again.", "error");
+      setSelectedFiles((prev) => {
+        const updated = { ...prev };
+        delete updated[key];
+        return updated;
+      });
+    } else {
+      showToast(data.message || "Upload failed", "error");
     }
-  };
+  } catch (error) {
+    console.error("Upload error:", error);
+    showToast("Error uploading document. Try again.", "error");
+  }
+};
 
   const handleDownload = (key, companyName) => {
     showToast(`Downloading ${companyName || ''} agreement...`, 'success');
