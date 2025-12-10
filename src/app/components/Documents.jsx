@@ -63,21 +63,53 @@ const DocumentUpload = ({ showToast }) => {
     }
   };
 
-  const handleUpload = (key) => {
+  const handleUpload = async (key) => {
     if (!selectedFiles[key]) return;
 
-    uploadDocument(key, {
-      name: selectedFiles[key].name,
-      size: selectedFiles[key].size
-    });
+    const file = selectedFiles[key];
 
-    setSelectedFiles(prev => {
-      const updated = { ...prev };
-      delete updated[key];
-      return updated;
-    });
+    // Optionally: create FormData if your API accepts files
+    const filesArr = [file]; // or upload to S3/CDN and get URLs
 
-    showToast('Document uploaded successfully! Awaiting verification.', 'success');
+    try {
+      // Upload to API
+      const payload = {
+        user_id: student.id,
+        document_type: key,
+        documents_arr: filesArr.map(f => f.name) // replace with actual URLs if uploaded to CDN
+      };
+
+      const res = await fetch("https://d17qozs0vubb7e.cloudfront.net/api/students/upload/supporting-documents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        // Update context with uploaded files
+        uploadDocument(key, data.files.map(url => ({
+          name: url.split("/").pop(),
+          url,
+          status: "Pending Verification",
+          uploadDate: new Date().toISOString()
+        })));
+
+        showToast(`Uploaded ${data.uploaded_count} document(s) for ${key}`, "success");
+
+        setSelectedFiles(prev => {
+          const updated = { ...prev };
+          delete updated[key];
+          return updated;
+        });
+      } else {
+        showToast(data.message || "Upload failed", "error");
+      }
+    } catch (error) {
+      console.error(error);
+      showToast("Error uploading document. Try again.", "error");
+    }
   };
 
   const handleDownload = (key, companyName) => {

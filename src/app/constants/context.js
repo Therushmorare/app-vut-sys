@@ -54,15 +54,11 @@ export function StudentProvider({ children, initialStudent }) {
     updateStudent({ uploadedDocuments: documents });
   };
 
-  const uploadDocument = (docKey, docData) => {
+  const uploadDocument = (docKey, filesArr) => {
     setStudent(prev => {
       const uploadedDocs = {
         ...(prev.uploadedDocuments || {}),
-        [docKey]: {
-          ...docData,
-          uploadDate: new Date().toISOString(),
-          status: 'Pending Verification'
-        }
+        [docKey]: filesArr.length === 1 ? filesArr[0] : filesArr
       };
 
       const updated = { ...prev, uploadedDocuments: uploadedDocs };
@@ -71,7 +67,7 @@ export function StudentProvider({ children, initialStudent }) {
       const notification = {
         id: Date.now(),
         title: 'Document Uploaded',
-        message: `Your ${docKey.replace(/([A-Z])/g, ' $1').trim()} has been uploaded and is pending verification.`,
+        message: `${docKey.replace(/([A-Z])/g, ' $1').trim()} uploaded and pending verification.`,
         date: new Date().toISOString(),
         read: false,
         type: 'document'
