@@ -66,34 +66,60 @@ const DocumentUpload = () => {
 
   const handleUpload = async (key) => {
     if (!selectedFiles[key]) return;
+
     const file = selectedFiles[key];
+
+    // Validate file size and type again just in case
+    if (file.size > 5 * 1024 * 1024) {
+      showToast("File size must be less than 5MB", "error");
+      return;
+    }
+
+    const validTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
+    if (!validTypes.includes(file.type)) {
+      showToast("Only PDF, JPG, and PNG files are allowed", "error");
+      return;
+    }
 
     const formData = new FormData();
     formData.append("user_id", student.id);
     formData.append("document_type", key);
-    formData.append("file", file); // send actual file
+    formData.append("file", file);
 
     try {
       const res = await fetch(
         "https://d17qozs0vubb7e.cloudfront.net/api/students/upload/supporting-documents",
         {
           method: "POST",
-          body: formData // no JSON.stringify needed
+          body: formData, // FormData handles the headers automatically
         }
       );
 
-      const data = await res.json();
+      // Safely parse JSON
+      let data;
+      try {
+        data = await res.json();
+      } catch (err) {
+        const text = await res.text();
+        console.error("Invalid JSON response from server:", text);
+        showToast("Upload failed: invalid server response", "error");
+        return;
+      }
 
       if (res.ok) {
-        uploadDocument(key, data.files.map(url => ({
-          name: url.split("/").pop(),
-          url,
-          status: "Pending Verification",
-          uploadDate: new Date().toISOString()
-        })));
-        showToast(`Uploaded ${data.uploaded_count} document(s) for ${key}`, "success");
+        uploadDocument(
+          key,
+          data.files.map((url) => ({
+            name: url.split("/").pop(),
+            url,
+            status: "Pending Verification",
+            uploadDate: new Date().toISOString(),
+          }))
+        );
 
-        setSelectedFiles(prev => {
+        showToast(`Uploaded ${data.uploaded_count || 1} document(s) for ${key}`, "success");
+
+        setSelectedFiles((prev) => {
           const updated = { ...prev };
           delete updated[key];
           return updated;
@@ -102,7 +128,7 @@ const DocumentUpload = () => {
         showToast(data.message || "Upload failed", "error");
       }
     } catch (error) {
-      console.error(error);
+      console.error("Upload error:", error);
       showToast("Error uploading document. Try again.", "error");
     }
   };
