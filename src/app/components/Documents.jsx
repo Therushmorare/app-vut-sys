@@ -6,7 +6,7 @@ import { COLORS } from '../constants/colors';
 import { formatDate } from '../utils/date';
 import { useStudent } from '../constants/context';
 
-const DocumentUpload = ({ showToast }) => {
+const DocumentUpload = ({ student, showToast }) => {
   const { student, uploadDocument, signAgreement } = useStudent();
   const [selectedFiles, setSelectedFiles] = useState({});
 

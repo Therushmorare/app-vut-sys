@@ -94,7 +94,7 @@ export default function StudentPortal() {
               className="rounded-lg p-8 shadow-sm text-center"
               style={{ backgroundColor: COLORS.bgWhite }}
             >
-              <DocumentUpload student={currentStudent} />
+              <DocumentUpload student={currentStudent} showToast={showToast} />
             </div>
           )}
           {activeView === "notifications" && (
