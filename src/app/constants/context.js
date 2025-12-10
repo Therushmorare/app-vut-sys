@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState } from 'react';
 
 const StudentContext = createContext();
 
@@ -11,7 +11,6 @@ export function StudentProvider({ children, initialStudent }) {
     const uploadedDocs = updatedStudent.uploadedDocuments || {};
 
     const allDocsUploaded = requiredDocs.every(doc => uploadedDocs[doc]);
-
     const allDocsVerified = allDocsUploaded && requiredDocs.every(
       doc => uploadedDocs[doc]?.status === 'Verified'
     );
@@ -26,25 +25,24 @@ export function StudentProvider({ children, initialStudent }) {
   };
 
   const [student, setStudent] = useState(() => {
-  if (!initialStudent) return null;
-  
-  const progress = calculateProgress(initialStudent);
-  return {
-    ...initialStudent,
-    ...progress
-  };
-});
+    if (!initialStudent) return null;
+    const progress = calculateProgress(initialStudent);
+    return {
+      ...initialStudent,
+      ...progress
+    };
+  });
 
   const updateStudent = (updates) => {
     setStudent(prev => {
       const updated = { ...prev, ...updates };
       const progress = calculateProgress(updated);
-      
+
       return {
         ...updated,
         ...progress,
-        status: progress.documentsComplete && updated.setaAllocation && updated.placement 
-          ? 'Active' 
+        status: progress.documentsComplete && updated.setaAllocation && updated.placement
+          ? 'Active'
           : 'Pending'
       };
     });
@@ -158,12 +156,10 @@ export function StudentProvider({ children, initialStudent }) {
     }));
   };
 
-  const showToast = (message, type = "success") => {
-    console.log(`[TOAST - ${type}] ${message}`);
-    if (typeof window !== "undefined") {
-      const event = new CustomEvent("show-toast", { detail: { message, type } });
-      window.dispatchEvent(event);
-    }
+  // ✅ Add showToast function
+  const showToast = (message, type = 'info') => {
+    // Replace alert with a toast library like react-hot-toast if desired
+    alert(`${type.toUpperCase()}: ${message}`);
   };
 
   return (
@@ -176,7 +172,7 @@ export function StudentProvider({ children, initialStudent }) {
       allocateSeta,
       assignPlacement,
       markNotificationRead,
-      showToast
+      showToast // ✅ include showToast
     }}>
       {children}
     </StudentContext.Provider>
