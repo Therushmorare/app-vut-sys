@@ -21,14 +21,26 @@ export default function Verify({ onVerify }) {
     e.preventDefault();
 
     if (!form.mfa_code.trim()) {
-      setError("MFA code is required");
+      setError("Verification code is required");
+      return;
+    }
+
+    const stored = sessionStorage.getItem("student");
+    const student = stored ? JSON.parse(stored) : null;
+    const email = student?.email;
+
+    if (!email) {
+      setError("Cannot verify: No email found in session.");
       return;
     }
 
     setLoading(true);
 
     try {
-      const payload = { mfa_code: form.mfa_code.trim() };
+      const payload = {
+              email: email,
+              token: form.mfa_code.trim()
+        };
 
       const response = await axios.post(
         "https://seta-management-api-fvzc9.ondigitalocean.app/api/students/verify-token",
@@ -84,7 +96,7 @@ export default function Verify({ onVerify }) {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-2 text-gray-700">
-              MFA Code
+              Verification Code
             </label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
