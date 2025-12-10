@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect } from 'react';
+import { useToast } from "./ToastContext";
 
 const StudentContext = createContext();
 
@@ -167,7 +168,8 @@ export function StudentProvider({ children, initialStudent }) {
       signAgreement,
       allocateSeta,
       assignPlacement,
-      markNotificationRead
+      markNotificationRead,
+      showToast
     }}>
       {children}
     </StudentContext.Provider>
