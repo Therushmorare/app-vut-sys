@@ -6,20 +6,30 @@ const StudentContext = createContext();
 
 export function StudentProvider({ children, initialStudent }) {
 
+  // ✅ Updated to handle multiple files per document type
   const calculateProgress = (updatedStudent) => {
     const requiredDocs = ['idDocument', 'proofOfResidence', 'academicTranscript', 'cv', 'bankStatement'];
     const uploadedDocs = updatedStudent.uploadedDocuments || {};
 
-    const allDocsUploaded = requiredDocs.every(doc => uploadedDocs[doc]);
-    const allDocsVerified = allDocsUploaded && requiredDocs.every(
-      doc => uploadedDocs[doc]?.status === 'Verified'
+    let uploadedCount = 0;
+    let verifiedCount = 0;
+
+    requiredDocs.forEach(doc => {
+      const docArray = uploadedDocs[doc] || [];
+      if (docArray.length > 0) uploadedCount++;
+      verifiedCount += docArray.filter(d => d.status === 'Verified').length;
+    });
+
+    const allDocsUploaded = requiredDocs.every(doc => (uploadedDocs[doc] || []).length > 0);
+    const allDocsVerified = requiredDocs.every(doc => 
+      (uploadedDocs[doc] || []).every(d => d.status === 'Verified')
     );
 
     return {
       documentsComplete: allDocsVerified,
       documentsUploaded: allDocsUploaded,
-      verifiedCount: requiredDocs.filter(doc => uploadedDocs[doc]?.status === 'Verified').length,
-      uploadedCount: requiredDocs.filter(doc => uploadedDocs[doc]).length,
+      verifiedCount,
+      uploadedCount,
       totalRequired: requiredDocs.length
     };
   };
@@ -52,7 +62,6 @@ export function StudentProvider({ children, initialStudent }) {
     updateStudent({ uploadedDocuments: documents });
   };
 
-  // ✅ Merge new uploads with existing API documents
   const uploadDocument = (docKey, filesArr) => {
     setStudent(prev => {
       const existingDocs = prev.uploadedDocuments?.[docKey] || [];
