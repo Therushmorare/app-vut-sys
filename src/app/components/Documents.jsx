@@ -10,7 +10,7 @@ import { useStudent } from '../constants/context';
 const DocumentUpload = () => {
   const { student, uploadDocument, signAgreement, showToast } = useStudent();
   const [selectedFiles, setSelectedFiles] = useState({});
-  
+
   const requiredDocuments = [
     { key: 'idDocument', label: 'ID Document / Passport', icon: FileText, required: true },
     { key: 'proofOfResidence', label: 'Proof of Residence', icon: FileText, required: true },
@@ -66,37 +66,31 @@ const DocumentUpload = () => {
 
   const handleUpload = async (key) => {
     if (!selectedFiles[key]) return;
-
     const file = selectedFiles[key];
 
-    // Optionally: create FormData if your API accepts files
-    const filesArr = [file]; // or upload to S3/CDN and get URLs
+    const formData = new FormData();
+    formData.append("user_id", student.id);
+    formData.append("document_type", key);
+    formData.append("file", file); // send actual file
 
     try {
-      // Upload to API
-      const payload = {
-        user_id: student.id,
-        document_type: key,
-        documents_arr: filesArr.map(f => f.name) // replace with actual URLs if uploaded to CDN
-      };
-
-      const res = await fetch("https://d17qozs0vubb7e.cloudfront.net/api/students/upload/supporting-documents", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
+      const res = await fetch(
+        "https://d17qozs0vubb7e.cloudfront.net/api/students/upload/supporting-documents",
+        {
+          method: "POST",
+          body: formData // no JSON.stringify needed
+        }
+      );
 
       const data = await res.json();
 
       if (res.ok) {
-        // Update context with uploaded files
         uploadDocument(key, data.files.map(url => ({
           name: url.split("/").pop(),
           url,
           status: "Pending Verification",
           uploadDate: new Date().toISOString()
         })));
-
         showToast(`Uploaded ${data.uploaded_count} document(s) for ${key}`, "success");
 
         setSelectedFiles(prev => {
