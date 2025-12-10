@@ -52,11 +52,13 @@ export function StudentProvider({ children, initialStudent }) {
     updateStudent({ uploadedDocuments: documents });
   };
 
+  // ✅ Merge new uploads with existing API documents
   const uploadDocument = (docKey, filesArr) => {
     setStudent(prev => {
+      const existingDocs = prev.uploadedDocuments?.[docKey] || [];
       const uploadedDocs = {
         ...(prev.uploadedDocuments || {}),
-        [docKey]: filesArr
+        [docKey]: [...existingDocs, ...filesArr]
       };
 
       const updated = { ...prev, uploadedDocuments: uploadedDocs };
@@ -156,9 +158,7 @@ export function StudentProvider({ children, initialStudent }) {
     }));
   };
 
-  // ✅ Add showToast function
   const showToast = (message, type = 'info') => {
-    // Replace alert with a toast library like react-hot-toast if desired
     alert(`${type.toUpperCase()}: ${message}`);
   };
 
@@ -172,7 +172,7 @@ export function StudentProvider({ children, initialStudent }) {
       allocateSeta,
       assignPlacement,
       markNotificationRead,
-      showToast // ✅ include showToast
+      showToast
     }}>
       {children}
     </StudentContext.Provider>
