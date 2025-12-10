@@ -82,7 +82,7 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
         firstName: student.first_name,
         lastName: student.last_name,
         email: student.email,
-        phoneNumber: student.phone_number,
+        phone: student.phone_number,
         dateOfBirth: student.date_of_birth,
         gender: student.gender,
         idNumber: student.ID_number,
@@ -93,7 +93,7 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
         status: student.status,
         registrationDate: student.registrationDate
       };
-      
+
       // Store full student object
       sessionStorage.setItem("student", JSON.stringify(mappedStudent));
 
