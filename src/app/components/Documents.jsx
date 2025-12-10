@@ -6,10 +6,10 @@ import { COLORS } from '../constants/colors';
 import { formatDate } from '../utils/date';
 import { useStudent } from '../constants/context';
 
-const DocumentUpload = ({ student, showToast }) => {
+const DocumentUpload = ({ showToast }) => {
   const { student, uploadDocument, signAgreement } = useStudent();
   const [selectedFiles, setSelectedFiles] = useState({});
-
+  
   const requiredDocuments = [
     { key: 'idDocument', label: 'ID Document / Passport', icon: FileText, required: true },
     { key: 'proofOfResidence', label: 'Proof of Residence', icon: FileText, required: true },
