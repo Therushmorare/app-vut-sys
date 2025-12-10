@@ -9,7 +9,7 @@ import { useStudent } from '../constants/context';
 const DocumentUpload = ({ showToast }) => {
   const { student, uploadDocument, signAgreement } = useStudent();
   const [selectedFiles, setSelectedFiles] = useState({});
-  
+
   const requiredDocuments = [
     { key: 'idDocument', label: 'ID Document / Passport', icon: FileText, required: true },
     { key: 'proofOfResidence', label: 'Proof of Residence', icon: FileText, required: true },
@@ -178,7 +178,9 @@ const DocumentUpload = ({ showToast }) => {
         <div className="space-y-4">
           {requiredDocuments.map(doc => {
             const Icon = doc.icon;
-            const uploaded = uploadedDocs[doc.key];
+            const uploaded = Array.isArray(uploadedDocs[doc.key])
+              ? uploadedDocs[doc.key][0]
+              : uploadedDocs[doc.key];
             const selected = selectedFiles[doc.key];
 
             return (

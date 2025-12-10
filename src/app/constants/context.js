@@ -58,7 +58,7 @@ export function StudentProvider({ children, initialStudent }) {
     setStudent(prev => {
       const uploadedDocs = {
         ...(prev.uploadedDocuments || {}),
-        [docKey]: filesArr.length === 1 ? filesArr[0] : filesArr
+        [docKey]: filesArr
       };
 
       const updated = { ...prev, uploadedDocuments: uploadedDocs };
