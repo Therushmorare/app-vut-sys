@@ -70,6 +70,10 @@ const DocumentUpload = () => {
 
       setUploadedDocs(grouped);
 
+      // Save uploaded documents count in sessionStorage
+      const uploadedCount = Object.keys(grouped).length;
+      sessionStorage.setItem('uploadedDocumentsCount', uploadedCount);
+
     } catch (err) {
       console.error("Document load error:", err);
     }
