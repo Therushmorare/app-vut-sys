@@ -112,7 +112,7 @@ const StudentDashboard = ({ student, onNavigate }) => {
             <FileText className="w-5 h-5" style={{ color: COLORS.info }} />
           </div>
           <p className="text-3xl font-bold mb-2" style={{ color: COLORS.primary }}>
-            `${student.uploadedCount || 0}/${student.totalRequired || 5}`
+            {student.uploadedCount || 0}/{student.totalRequired || 5}
           </p>
           <p className="text-sm text-gray-600">
             {student.documentsComplete ? 'All verified' : 'Upload required'}
