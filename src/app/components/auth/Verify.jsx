@@ -25,10 +25,18 @@ export default function Verify({ onVerify }) {
       return;
     }
 
+    if (!form.email?.trim()) {
+      setError("Email is required");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const payload = { mfa_code: form.mfa_code.trim() };
+      const payload = {
+        email: form.email.trim(),
+        token: form.mfa_code.trim()
+      };
 
       const response = await axios.post(
         "https://seta-management-api-fvzc9.ondigitalocean.app/api/students/verify-token",
@@ -36,12 +44,12 @@ export default function Verify({ onVerify }) {
         { headers: { "Content-Type": "application/json" } }
       );
 
-      setSuccess(response.data.message || "MFA verified!");
-      console.log("MFA Response:", response.data);
+      setSuccess(response.data.message || "Account verified!");
+      console.log("Verification Response:", response.data);
 
       if (onVerify) onVerify(response.data);
     } catch (err) {
-      console.error("MFA error:", err);
+      console.error("Verification error:", err);
       setError(err.response?.data?.message || "Something went wrong.");
     } finally {
       setLoading(false);
@@ -93,7 +101,7 @@ export default function Verify({ onVerify }) {
                 name="mfa_code"
                 value={form.mfa_code}
                 onChange={(e) => handleChange("mfa_code", e.target.value)}
-                placeholder="Enter MFA Code"
+                placeholder="Enter Verification Code"
                 className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
                 style={{ borderColor: error ? COLORS.danger : COLORS.border }}
               />
