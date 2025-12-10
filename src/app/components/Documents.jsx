@@ -91,19 +91,16 @@ const handleUpload = async (key) => {
       "https://d17qozs0vubb7e.cloudfront.net/api/students/upload/supporting-documents",
       {
         method: "POST",
-        body: formData,
-        // Optional: add Authorization if your backend requires it
-        // headers: { Authorization: `Bearer ${student.token}` },
+        body: formData, // FormData handles headers automatically
       }
     );
 
-    const text = await res.text();
-
-    // Check if response is JSON or HTML
+    // Safely parse JSON or catch HTML errors
     let data;
     try {
-      data = JSON.parse(text);
-    } catch {
+      data = await res.json();
+    } catch (err) {
+      const text = await res.text();
       console.error("Invalid JSON response from server:", text);
       showToast("Upload failed: invalid server response", "error");
       return;
