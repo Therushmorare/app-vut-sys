@@ -10,6 +10,7 @@ export default function Verify({ onVerify }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [imageLoaded, setImageLoaded] = useState(true);
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));

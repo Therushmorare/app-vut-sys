@@ -6,6 +6,7 @@ import { COLORS } from '../constants/colors';
 
 const Header = ({ student, onLogout, onNavigate }) => {
   const [showDropdown, setShowDropdown] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(true);
 
   const getInitials = () => {
     return `${student.firstName[0]}${student.lastName[0]}`.toUpperCase();

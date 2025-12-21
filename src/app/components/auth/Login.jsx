@@ -18,6 +18,7 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState("");
   const [apiSuccess, setApiSuccess] = useState("");
+  const [imageLoaded, setImageLoaded] = useState(true);
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));

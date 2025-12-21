@@ -14,6 +14,7 @@ export default function Forgot({ onSwitchToRegister }) {
   const [error, setError] = useState("");
 
   const router = useRouter();
+  const [imageLoaded, setImageLoaded] = useState(true);
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));

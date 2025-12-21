@@ -27,6 +27,7 @@ const Registration = ({ onRegister, onSwitchToLogin }) => {
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState("");
   const [apiSuccess, setApiSuccess] = useState("");
+  const [imageLoaded, setImageLoaded] = useState(true);
 
   const faculties = [
     "Engineering and Technology",

@@ -17,6 +17,7 @@ export default function ResetPassword({ onSwitchToLogin }) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
+  const [imageLoaded, setImageLoaded] = useState(true);
 
   const router = useRouter();
 
