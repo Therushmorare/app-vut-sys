@@ -112,7 +112,7 @@ const StudentBankingProfile = ({ student, onUpdate, showToast }) => {
             className="px-6 py-2 rounded-lg text-white font-medium transition"
             style={{ backgroundColor: COLORS.primary }}
           >
-            Save Banking Details
+            Save Details
           </button>
         </div>
       </div>
