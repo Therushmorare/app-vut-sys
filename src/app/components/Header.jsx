@@ -16,7 +16,19 @@ const Header = ({ student, onLogout, onNavigate }) => {
       <div className="max-w-7xl mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <GraduationCap className="w-8 h-8" style={{ color: COLORS.primary }} />
+            {imageLoaded ? (
+              <img
+                src="https://res.cloudinary.com/dbuuizuka/image/upload/v1761697835/id3tj44Wsz_1761674029816_z2fjde.png"
+                alt="Graduation Cap"
+                className="w-16 h-16 object-contain"
+                onError={() => setImageLoaded(false)}
+              />
+            ) : (
+              <GraduationCap
+                className="w-16 h-16"
+                style={{ color: COLORS.primary }}
+              />
+            )}
             <h1 className="text-xl font-bold" style={{ color: COLORS.primary }}>
               Student Portal
             </h1>

@@ -120,10 +120,19 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
         style={{ backgroundColor: COLORS.bgWhite }}
       >
         <div className="text-center mb-8">
-          <GraduationCap
-            className="w-16 h-16 mx-auto mb-4"
-            style={{ color: COLORS.primary }}
-          />
+          {imageLoaded ? (
+            <img
+              src="https://res.cloudinary.com/dbuuizuka/image/upload/v1761697835/id3tj44Wsz_1761674029816_z2fjde.png"
+              alt="Graduation Cap"
+              className="w-16 h-16 object-contain"
+              onError={() => setImageLoaded(false)}
+            />
+          ) : (
+            <GraduationCap
+              className="w-16 h-16"
+              style={{ color: COLORS.primary }}
+            />
+          )}
           <h1
             className="text-3xl font-bold mb-2"
             style={{ color: COLORS.primary }}

@@ -114,7 +114,19 @@ const Registration = ({ onRegister, onSwitchToLogin }) => {
     <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: COLORS.bgLight }}>
       <div className="w-full max-w-2xl rounded-lg shadow-lg p-8" style={{ backgroundColor: COLORS.bgWhite }}>
         <div className="text-center mb-8">
-          <GraduationCap className="w-16 h-16 mx-auto mb-4" style={{ color: COLORS.primary }} />
+          {imageLoaded ? (
+            <img
+              src="https://res.cloudinary.com/dbuuizuka/image/upload/v1761697835/id3tj44Wsz_1761674029816_z2fjde.png"
+              alt="Graduation Cap"
+              className="w-16 h-16 object-contain"
+              onError={() => setImageLoaded(false)}
+            />
+          ) : (
+            <GraduationCap
+              className="w-16 h-16"
+              style={{ color: COLORS.primary }}
+            />
+          )}
           <h1 className="text-3xl font-bold mb-2" style={{ color: COLORS.primary }}>Student Registration</h1>
           <p className="text-gray-600">Create your student portal account</p>
         </div>

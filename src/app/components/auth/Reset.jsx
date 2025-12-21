@@ -83,7 +83,19 @@ export default function ResetPassword({ onSwitchToLogin }) {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <GraduationCap className="w-16 h-16" style={{ color: COLORS.primary }} />
+            {imageLoaded ? (
+              <img
+                src="https://res.cloudinary.com/dbuuizuka/image/upload/v1761697835/id3tj44Wsz_1761674029816_z2fjde.png"
+                alt="Graduation Cap"
+                className="w-16 h-16 object-contain"
+                onError={() => setImageLoaded(false)}
+              />
+            ) : (
+              <GraduationCap
+                className="w-16 h-16"
+                style={{ color: COLORS.primary }}
+              />
+            )}
           </div>
           <h1 className="text-3xl font-bold mb-2" style={{ color: COLORS.primary }}>
             Reset Password
