@@ -116,12 +116,14 @@ const Registration = ({ onRegister, onSwitchToLogin }) => {
       <div className="w-full max-w-2xl rounded-lg shadow-lg p-8" style={{ backgroundColor: COLORS.bgWhite }}>
         <div className="text-center mb-8">
           {imageLoaded ? (
-            <img
-              src="https://res.cloudinary.com/dbuuizuka/image/upload/v1761697835/id3tj44Wsz_1761674029816_z2fjde.png"
-              alt="Graduation Cap"
-              className="w-16 h-16 object-contain"
-              onError={() => setImageLoaded(false)}
-            />
+            <div className="flex items-center justify-center">
+              <img
+                src="https://res.cloudinary.com/dbuuizuka/image/upload/v1761697835/id3tj44Wsz_1761674029816_z2fjde.png"
+                alt="Graduation Cap"
+                className="w-20 h-20 object-contain"
+                onError={() => setImageLoaded(false)}
+              />
+            </div>
           ) : (
             <GraduationCap
               className="w-16 h-16"

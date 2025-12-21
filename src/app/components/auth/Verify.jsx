@@ -72,12 +72,14 @@ export default function Verify({ onVerify }) {
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             {imageLoaded ? (
+            <div className="flex items-center justify-center">
               <img
                 src="https://res.cloudinary.com/dbuuizuka/image/upload/v1761697835/id3tj44Wsz_1761674029816_z2fjde.png"
                 alt="Graduation Cap"
-                className="w-16 h-16 object-contain"
+                className="w-20 h-20 object-contain"
                 onError={() => setImageLoaded(false)}
               />
+            </div>
             ) : (
               <GraduationCap
                 className="w-16 h-16"
