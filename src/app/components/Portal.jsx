@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Home, FileText, User, Bell } from "lucide-react";
+import { Home, FileText, User, Bell, CreditCard } from "lucide-react";
 import { COLORS } from "../constants/colors";
 
 import { StudentProvider, useStudent } from "../constants/context"; // ✅ import context
@@ -11,10 +11,11 @@ import Dashboard from "./Dashboard/Dashboard";
 import Profile from "./Dashboard/Profile";
 import DocumentUpload from "./Documents";
 import Notifications from "./Notifications";
+import Banking from "./Banking/Banking";
 
 // Wrapper to provide context and access showToast
 function DocumentsWrapper() {
-  const { showToast } = useStudent(); // ✅ get showToast from context
+  const { showToast } = useStudent(); //get showToast from context
   return <DocumentUpload showToast={showToast} />;
 }
 
@@ -50,6 +51,7 @@ export default function StudentPortal() {
     { id: "dashboard", label: "Dashboard", icon: Home },
     { id: "documents", label: "Documents", icon: FileText },
     { id: "profile", label: "Profile", icon: User },
+    {id: "banking", label: "Banking", icon: CreditCard},
     { id: "notifications", label: "Notifications", icon: Bell },
   ];
 
@@ -105,6 +107,7 @@ export default function StudentPortal() {
                 <DocumentsWrapper />
               </div>
             )}
+            {activeView === "banking" && <Banking student={currentStudent} />}
             {activeView === "notifications" && (
               <div
                 className="rounded-lg p-8 shadow-sm text-center"
