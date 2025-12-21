@@ -149,6 +149,53 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
         </div>
       </div>
 
+      {/* Biographical Details */}
+      <div
+        className="rounded-lg p-6 shadow-sm"
+        style={{ backgroundColor: COLORS.bgWhite }}
+      >
+        <h2
+          className="text-xl font-bold mb-6"
+          style={{ color: COLORS.primary }}
+        >
+          Biographical Information
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Date of Birth */}
+          <div>
+            <p className="text-sm font-medium mb-1" style={{ color: COLORS.text }}>
+              Date of Birth
+            </p>
+            <p className="text-gray-600">
+              {student.dateOfBirth
+                ? formatDate(student.dateOfBirth)
+                : "Not provided"}
+            </p>
+          </div>
+
+          {/* Gender */}
+          <div>
+            <p className="text-sm font-medium mb-1" style={{ color: COLORS.text }}>
+              Gender
+            </p>
+            <p className="text-gray-600">
+              {student.gender || "Not provided"}
+            </p>
+          </div>
+
+          {/* Address */}
+          <div className="md:col-span-2">
+            <p className="text-sm font-medium mb-1" style={{ color: COLORS.text }}>
+              Address
+            </p>
+            <p className="text-gray-600">
+              {student.address || "Not provided"}
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Academic Information */}
       <div className="rounded-lg p-6 shadow-sm" style={{ backgroundColor: COLORS.bgWhite }}>
         <h2 className="text-xl font-bold mb-6" style={{ color: COLORS.primary }}>
