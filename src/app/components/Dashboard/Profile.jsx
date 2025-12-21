@@ -164,34 +164,54 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Date of Birth */}
           <div>
-            <p className="text-sm font-medium mb-1" style={{ color: COLORS.text }}>
+            <label className="block text-sm font-medium mb-2 text-gray-700">
               Date of Birth
-            </p>
-            <p className="text-gray-600">
-              {student.dateOfBirth
-                ? formatDate(student.dateOfBirth)
-                : "Not provided"}
-            </p>
+            </label>
+            <input
+              type="date"
+              value={form.dateOfBirth || ""}
+              onChange={(e) => handleChange("dateOfBirth", e.target.value)}
+              disabled={!isEditing}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 disabled:bg-gray-50"
+              style={{ borderColor: COLORS.border }}
+            />
           </div>
 
           {/* Gender */}
           <div>
-            <p className="text-sm font-medium mb-1" style={{ color: COLORS.text }}>
+            <label className="block text-sm font-medium mb-2 text-gray-700">
               Gender
-            </p>
-            <p className="text-gray-600">
-              {student.gender || "Not provided"}
-            </p>
+            </label>
+            <select
+              value={form.gender || ""}
+              onChange={(e) => handleChange("gender", e.target.value)}
+              disabled={!isEditing}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 disabled:bg-gray-50"
+              style={{ borderColor: COLORS.border }}
+            >
+              <option value="" disabled>
+                Select gender
+              </option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
           </div>
 
           {/* Address */}
           <div className="md:col-span-2">
-            <p className="text-sm font-medium mb-1" style={{ color: COLORS.text }}>
+            <label className="block text-sm font-medium mb-2 text-gray-700">
               Address
-            </p>
-            <p className="text-gray-600">
-              {student.address || "Not provided"}
-            </p>
+            </label>
+            <textarea
+              rows={3}
+              value={form.address || ""}
+              onChange={(e) => handleChange("address", e.target.value)}
+              disabled={!isEditing}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 disabled:bg-gray-50 resize-none"
+              style={{ borderColor: COLORS.border }}
+              placeholder="Enter your residential address"
+            />
           </div>
         </div>
       </div>
