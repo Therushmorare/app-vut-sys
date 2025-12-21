@@ -169,7 +169,7 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
             </label>
             <input
               type="date"
-              value={form.dateOfBirth || ""}
+              value={formData.dateOfBirth || ""}
               onChange={(e) => handleChange("dateOfBirth", e.target.value)}
               disabled={!isEditing}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 disabled:bg-gray-50"
@@ -183,7 +183,7 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
               Gender
             </label>
             <select
-              value={form.gender || ""}
+              value={formData.gender || ""}
               onChange={(e) => handleChange("gender", e.target.value)}
               disabled={!isEditing}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 disabled:bg-gray-50"
@@ -205,7 +205,7 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
             </label>
             <textarea
               rows={3}
-              value={form.address || ""}
+              value={formData.address || ""}
               onChange={(e) => handleChange("address", e.target.value)}
               disabled={!isEditing}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 disabled:bg-gray-50 resize-none"
