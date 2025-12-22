@@ -48,9 +48,9 @@ export default function ResetPassword({ onSwitchToLogin }) {
     try {
       const payload = {
         otp: formData.otp.trim(),
+        email: sessionStorage.getItem("temp_email"),
         new_password: formData.newPassword,
         confirm_password: formData.confirmPassword,
-        email: sessionStorage.getItem("temp_email"),
       };
 
       const response = await axios.post(
