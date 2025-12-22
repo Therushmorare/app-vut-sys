@@ -37,7 +37,7 @@ export default function Forgot({ onSwitchToRegister }) {
       const response = await axios.post(
         "https://seta-management-api-fvzc9.ondigitalocean.app/api/students/forgot-pass",
         { email: formData.email.trim(),
-          user_type: "Students"
+          user_type: "student",
         },
         { headers: { "Content-Type": "application/json" } }
       );
