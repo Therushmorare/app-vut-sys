@@ -44,7 +44,9 @@ export default function Forgot({ onSwitchToRegister }) {
 
       setSuccess(response.data.message || "Password reset email sent!");
       console.log("Forgot Password response:", response.data);
-
+      sessionStorage.setItem("temp_email", formData.email.trim());
+      // Redirect to reset after a short delay
+      setTimeout(() => router.push("/reset"), 2000);
     } catch (err) {
       console.error("Forgot Password error:", err);
       setError(err.response?.data?.message || "Something went wrong.");

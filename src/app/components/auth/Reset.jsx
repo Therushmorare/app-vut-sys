@@ -47,10 +47,10 @@ export default function ResetPassword({ onSwitchToLogin }) {
 
     try {
       const payload = {
-        email: formData.email.trim(),
         otp: formData.otp.trim(),
         new_password: formData.newPassword,
         confirm_password: formData.confirmPassword,
+        email: sessionStorage.getItem("temp_email"),
       };
 
       const response = await axios.post(
@@ -114,20 +114,6 @@ export default function ResetPassword({ onSwitchToLogin }) {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Email */}
-          <div>
-            <label className="block text-sm font-medium mb-2 text-gray-700">Email</label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleChange("email", e.target.value)}
-                placeholder="your.email@university.ac.za"
-                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
-                style={{ borderColor: errors.email ? COLORS.danger : COLORS.border }}
-              />
-            </div>
-          </div>
 
           {/* OTP */}
           <div>
