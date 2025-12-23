@@ -126,40 +126,30 @@ const DocumentUpload = () => {
 
       const text = await res.text();
 
-      let data;
+      let data = {};
       try {
         data = JSON.parse(text);
       } catch {
         console.error("Invalid JSON response from server:", text);
-        showToast("Upload failed: invalid server response", "error");
+      }
+
+      if (!res.ok) {
+        showToast(data.message || "Upload failed", "error");
         return;
       }
 
-      if (res.ok) {
-        // Append uploaded files to state
-        setUploadedDocs(prev => ({
-          ...prev,
-          [key]: [
-            ...(prev[key] || []),
-            ...data.files.map(url => ({
-              name: url.split("/").pop(),
-              url,
-              status: "Pending Verification",
-              uploadDate: new Date().toISOString()
-            }))
-          ]
-        }));
+      //ALWAYS re-fetch documents from backend
+      await loadUploadedDocs();
 
-        showToast(`Uploaded ${data.uploaded_count || 1} document(s) for ${key}`, "success");
+      showToast("Document uploaded successfully", "success");
 
-        setSelectedFiles(prev => {
-          const updated = { ...prev };
-          delete updated[key];
-          return updated;
-        });
-      } else {
-        showToast(data.message || "Upload failed", "error");
-      }
+      // Clear selected file
+      setSelectedFiles(prev => {
+        const updated = { ...prev };
+        delete updated[key];
+        return updated;
+      });
+
     } catch (error) {
       console.error("Upload error:", error);
       showToast("Error uploading document. Try again.", "error");
