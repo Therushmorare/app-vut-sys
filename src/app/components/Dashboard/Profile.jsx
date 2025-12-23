@@ -12,10 +12,11 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(student || {});
   const [loading, setLoading] = useState(false);
+  const [apiError, setApiError] = useState(null); // <-- API error state
 
-  /* 🔄 Keep local state in sync */
   useEffect(() => {
     setFormData(student || {});
+    setApiError(null); // reset error if student changes
   }, [student]);
 
   const handleChange = (field, value) => {
@@ -23,12 +24,12 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
       ...prev,
       [field]: value,
     }));
+    setApiError(null); // reset error when user edits
   };
 
-  /* ================= SAVE PROFILE (API INTEGRATION) ================= */
   const handleSave = async () => {
     if (!formData?.user_id && !formData?.id) {
-      showToast?.("Missing student ID", "error");
+      setApiError("Missing student ID");
       return;
     }
 
@@ -48,11 +49,8 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
       faculty: formData.faculty,
     };
 
-    // Remove undefined / empty fields
     Object.keys(payload).forEach(
-      (key) =>
-        (payload[key] === undefined || payload[key] === "") &&
-        delete payload[key]
+      (key) => (payload[key] === undefined || payload[key] === "") && delete payload[key]
     );
 
     try {
@@ -67,19 +65,21 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
       const data = await res.json();
 
       if (!res.ok) {
+        setApiError(data?.message || "Profile update failed");
         showToast?.(data?.message || "Profile update failed", "error");
         return;
       }
 
-      // Update parent state if provided
       if (typeof onUpdate === "function") {
         onUpdate(data.student);
       }
 
       setIsEditing(false);
+      setApiError(null);
       showToast?.("Profile updated successfully!", "success");
     } catch (err) {
       console.error("Profile update error:", err);
+      setApiError("Server error while updating profile");
       showToast?.("Server error while updating profile", "error");
     } finally {
       setLoading(false);
@@ -89,6 +89,7 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
   const handleCancel = () => {
     setIsEditing(false);
     setFormData(student || {});
+    setApiError(null);
   };
 
   return (
@@ -98,21 +99,24 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
         title="Personal Information"
         action={
           !isEditing ? (
-            <PrimaryButton onClick={() => setIsEditing(true)}>
-              Edit Profile
-            </PrimaryButton>
+            <PrimaryButton onClick={() => setIsEditing(true)}>Edit Profile</PrimaryButton>
           ) : (
             <div className="flex gap-2">
               <SuccessButton onClick={handleSave} disabled={loading}>
                 {loading ? "Saving..." : "Save Changes"}
               </SuccessButton>
-              <SecondaryButton onClick={handleCancel}>
-                Cancel
-              </SecondaryButton>
+              <SecondaryButton onClick={handleCancel}>Cancel</SecondaryButton>
             </div>
           )
         }
       >
+        {/* ===== Display API errors here ===== */}
+        {apiError && (
+          <div className="mb-4 p-3 rounded bg-red-100 text-red-700 border border-red-300">
+            {apiError}
+          </div>
+        )}
+
         <Grid>
           <Input
             label="First Name"
@@ -157,7 +161,6 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
             disabled={!isEditing}
             onChange={(e) => handleChange("dateOfBirth", e.target.value)}
           />
-
           <Select
             label="Gender"
             value={formData.gender || ""}
@@ -165,7 +168,6 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
             onChange={(e) => handleChange("gender", e.target.value)}
             options={["Male", "Female", "Other"]}
           />
-
           <Textarea
             label="Address"
             value={formData.address || ""}
@@ -193,7 +195,6 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
 };
 
 /* ================= UI HELPERS ================= */
-
 const Section = ({ title, action, children }) => (
   <div className="rounded-lg p-6 shadow-sm" style={{ backgroundColor: COLORS.bgWhite }}>
     <div className="flex justify-between items-center mb-6">
@@ -206,9 +207,7 @@ const Section = ({ title, action, children }) => (
   </div>
 );
 
-const Grid = ({ children }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">{children}</div>
-);
+const Grid = ({ children }) => <div className="grid grid-cols-1 md:grid-cols-2 gap-6">{children}</div>;
 
 const ButtonBase = ({ children, ...props }) => (
   <button {...props} className="px-4 py-2 rounded-lg text-sm font-medium">
@@ -219,16 +218,11 @@ const ButtonBase = ({ children, ...props }) => (
 const PrimaryButton = (props) => (
   <ButtonBase {...props} style={{ backgroundColor: COLORS.primary, color: "#fff" }} />
 );
-
 const SuccessButton = (props) => (
   <ButtonBase {...props} style={{ backgroundColor: COLORS.success, color: "#fff" }} />
 );
-
 const SecondaryButton = (props) => (
-  <ButtonBase
-    {...props}
-    style={{ border: `1px solid ${COLORS.border}`, color: COLORS.text }}
-  />
+  <ButtonBase {...props} style={{ border: `1px solid ${COLORS.border}`, color: COLORS.text }} />
 );
 
 const Input = ({ label, ...props }) => (
@@ -237,7 +231,6 @@ const Input = ({ label, ...props }) => (
     <input {...props} className="w-full px-4 py-2 border rounded-lg bg-gray-50" />
   </div>
 );
-
 const IconInput = ({ label, icon, ...props }) => (
   <div>
     <label className="block text-sm font-medium mb-2 text-gray-700">{label}</label>
@@ -247,7 +240,6 @@ const IconInput = ({ label, icon, ...props }) => (
     </div>
   </div>
 );
-
 const Select = ({ label, options, ...props }) => (
   <div>
     <label className="block text-sm font-medium mb-2 text-gray-700">{label}</label>
@@ -261,7 +253,6 @@ const Select = ({ label, options, ...props }) => (
     </select>
   </div>
 );
-
 const Textarea = ({ label, ...props }) => (
   <div className="md:col-span-2">
     <label className="block text-sm font-medium mb-2 text-gray-700">{label}</label>
