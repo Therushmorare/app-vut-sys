@@ -13,10 +13,61 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = () => {
-    onUpdate(formData);
-    setIsEditing(false);
-    showToast('Profile updated successfully!', 'success');
+  const handleSave = async () => {
+    try {
+      const payload = {
+        user_id: student.id,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        email: formData.email,
+        phone_number: formData.phone,
+        date_of_birth: formData.dateOfBirth || null,
+        gender: formData.gender || null,
+        address: formData.address || null,
+      };
+
+      const res = await fetch(
+        "https://seta-management-api-fvzc9.ondigitalocean.app/api/students/student/profile/update",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        showToast(data.message || "Failed to update profile", "error");
+        return;
+      }
+
+      //Map API response back to camelCase
+      const updatedStudent = {
+        ...student,
+        firstName: data.student.first_name,
+        lastName: data.student.last_name,
+        email: data.student.email,
+        phone: data.student.phone_number,
+        dateOfBirth: data.student.date_of_birth,
+        gender: data.student.gender,
+        address: data.student.address,
+      };
+
+      // Update local state
+      setFormData(updatedStudent);
+      setIsEditing(false);
+
+      // Update parent + session storage
+      onUpdate(updatedStudent);
+      sessionStorage.setItem("student", JSON.stringify(updatedStudent));
+
+      showToast("Profile updated successfully!", "success");
+
+    } catch (error) {
+      console.error("Profile update error:", error);
+      showToast("Something went wrong while updating profile", "error");
+    }
   };
 
   return (
