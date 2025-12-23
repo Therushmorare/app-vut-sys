@@ -5,11 +5,15 @@ import { Mail, Phone } from "lucide-react";
 import { COLORS } from "../../constants/colors";
 import { formatDate } from "../../utils/date";
 
+const API_URL =
+  "https://seta-management-api-fvzc9.ondigitalocean.app/api/students/student/profile/update";
+
 const StudentProfile = ({ student, onUpdate, showToast }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(student || {});
+  const [loading, setLoading] = useState(false);
 
-  // 🔄 Keep local state in sync if parent student changes
+  /* 🔄 Keep local state in sync */
   useEffect(() => {
     setFormData(student || {});
   }, [student]);
@@ -21,20 +25,64 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
     }));
   };
 
-  const handleSave = () => {
-    // ✅ SAFETY CHECKS (prevents "l is not a function")
-    if (typeof onUpdate === "function") {
-      onUpdate(formData);
-    } else {
-      console.warn("onUpdate is not a function:", onUpdate);
+  /* ================= SAVE PROFILE (API INTEGRATION) ================= */
+  const handleSave = async () => {
+    if (!formData?.user_id && !formData?.id) {
+      showToast?.("Missing student ID", "error");
+      return;
     }
 
-    setIsEditing(false);
+    setLoading(true);
 
-    if (typeof showToast === "function") {
-      showToast("Profile updated successfully!", "success");
-    } else {
-      console.warn("showToast is not a function:", showToast);
+    const payload = {
+      user_id: formData.user_id || formData.id,
+      first_name: formData.firstName,
+      last_name: formData.lastName,
+      email: formData.email,
+      phone_number: formData.phone,
+      date_of_birth: formData.dateOfBirth,
+      gender: formData.gender,
+      ID_number: formData.idNumber,
+      address: formData.address,
+      student_number: formData.studentNumber,
+      faculty: formData.faculty,
+    };
+
+    // Remove undefined / empty fields
+    Object.keys(payload).forEach(
+      (key) =>
+        (payload[key] === undefined || payload[key] === "") &&
+        delete payload[key]
+    );
+
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        showToast?.(data?.message || "Profile update failed", "error");
+        return;
+      }
+
+      // Update parent state if provided
+      if (typeof onUpdate === "function") {
+        onUpdate(data.student);
+      }
+
+      setIsEditing(false);
+      showToast?.("Profile updated successfully!", "success");
+    } catch (err) {
+      console.error("Profile update error:", err);
+      showToast?.("Server error while updating profile", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -46,58 +94,38 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
   return (
     <div className="space-y-6">
       {/* ================= PERSONAL INFO ================= */}
-      <div
-        className="rounded-lg p-6 shadow-sm"
-        style={{ backgroundColor: COLORS.bgWhite }}
-      >
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold" style={{ color: COLORS.primary }}>
-            Personal Information
-          </h2>
-
-          {!isEditing ? (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="px-4 py-2 rounded-lg text-white text-sm font-medium"
-              style={{ backgroundColor: COLORS.primary }}
-            >
+      <Section
+        title="Personal Information"
+        action={
+          !isEditing ? (
+            <PrimaryButton onClick={() => setIsEditing(true)}>
               Edit Profile
-            </button>
+            </PrimaryButton>
           ) : (
             <div className="flex gap-2">
-              <button
-                onClick={handleSave}
-                className="px-4 py-2 rounded-lg text-white text-sm font-medium"
-                style={{ backgroundColor: COLORS.success }}
-              >
-                Save Changes
-              </button>
-              <button
-                onClick={handleCancel}
-                className="px-4 py-2 rounded-lg text-sm font-medium border"
-                style={{ color: COLORS.text, borderColor: COLORS.border }}
-              >
+              <SuccessButton onClick={handleSave} disabled={loading}>
+                {loading ? "Saving..." : "Save Changes"}
+              </SuccessButton>
+              <SecondaryButton onClick={handleCancel}>
                 Cancel
-              </button>
+              </SecondaryButton>
             </div>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          )
+        }
+      >
+        <Grid>
           <Input
             label="First Name"
             value={formData.firstName || ""}
             disabled={!isEditing}
             onChange={(e) => handleChange("firstName", e.target.value)}
           />
-
           <Input
             label="Last Name"
             value={formData.lastName || ""}
             disabled={!isEditing}
             onChange={(e) => handleChange("lastName", e.target.value)}
           />
-
           <Input label="Student Number" value={formData.studentNumber || ""} disabled />
           <Input label="ID Number" value={formData.idNumber || ""} disabled />
 
@@ -116,19 +144,12 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
             disabled={!isEditing}
             onChange={(e) => handleChange("phone", e.target.value)}
           />
-        </div>
-      </div>
+        </Grid>
+      </Section>
 
       {/* ================= BIOGRAPHICAL ================= */}
-      <div
-        className="rounded-lg p-6 shadow-sm"
-        style={{ backgroundColor: COLORS.bgWhite }}
-      >
-        <h2 className="text-xl font-bold mb-6" style={{ color: COLORS.primary }}>
-          Biographical Information
-        </h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <Section title="Biographical Information">
+        <Grid>
           <Input
             label="Date of Birth"
             type="date"
@@ -151,19 +172,12 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
             disabled={!isEditing}
             onChange={(e) => handleChange("address", e.target.value)}
           />
-        </div>
-      </div>
+        </Grid>
+      </Section>
 
       {/* ================= ACADEMIC ================= */}
-      <div
-        className="rounded-lg p-6 shadow-sm"
-        style={{ backgroundColor: COLORS.bgWhite }}
-      >
-        <h2 className="text-xl font-bold mb-6" style={{ color: COLORS.primary }}>
-          Academic Information
-        </h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <Section title="Academic Information">
+        <Grid>
           <Input label="Faculty" value={formData.faculty || ""} disabled />
           <Input label="Programme" value={formData.programme || ""} disabled />
           <Input
@@ -172,58 +186,73 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
             disabled
           />
           <Input label="Status" value={formData.status || ""} disabled />
-        </div>
-      </div>
+        </Grid>
+      </Section>
     </div>
   );
 };
 
-/* ================= REUSABLE COMPONENTS ================= */
+/* ================= UI HELPERS ================= */
+
+const Section = ({ title, action, children }) => (
+  <div className="rounded-lg p-6 shadow-sm" style={{ backgroundColor: COLORS.bgWhite }}>
+    <div className="flex justify-between items-center mb-6">
+      <h2 className="text-xl font-bold" style={{ color: COLORS.primary }}>
+        {title}
+      </h2>
+      {action}
+    </div>
+    {children}
+  </div>
+);
+
+const Grid = ({ children }) => (
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">{children}</div>
+);
+
+const ButtonBase = ({ children, ...props }) => (
+  <button {...props} className="px-4 py-2 rounded-lg text-sm font-medium">
+    {children}
+  </button>
+);
+
+const PrimaryButton = (props) => (
+  <ButtonBase {...props} style={{ backgroundColor: COLORS.primary, color: "#fff" }} />
+);
+
+const SuccessButton = (props) => (
+  <ButtonBase {...props} style={{ backgroundColor: COLORS.success, color: "#fff" }} />
+);
+
+const SecondaryButton = (props) => (
+  <ButtonBase
+    {...props}
+    style={{ border: `1px solid ${COLORS.border}`, color: COLORS.text }}
+  />
+);
 
 const Input = ({ label, ...props }) => (
   <div>
-    <label className="block text-sm font-medium mb-2 text-gray-700">
-      {label}
-    </label>
-    <input
-      {...props}
-      className="w-full px-4 py-2 border rounded-lg bg-gray-50"
-      style={{ borderColor: COLORS.border }}
-    />
+    <label className="block text-sm font-medium mb-2 text-gray-700">{label}</label>
+    <input {...props} className="w-full px-4 py-2 border rounded-lg bg-gray-50" />
   </div>
 );
 
 const IconInput = ({ label, icon, ...props }) => (
   <div>
-    <label className="block text-sm font-medium mb-2 text-gray-700">
-      {label}
-    </label>
+    <label className="block text-sm font-medium mb-2 text-gray-700">{label}</label>
     <div className="relative">
-      <span className="absolute left-3 top-1/2 -translate-y-1/2">
-        {icon}
-      </span>
-      <input
-        {...props}
-        className="w-full pl-10 pr-4 py-2 border rounded-lg bg-gray-50"
-        style={{ borderColor: COLORS.border }}
-      />
+      <span className="absolute left-3 top-1/2 -translate-y-1/2">{icon}</span>
+      <input {...props} className="w-full pl-10 pr-4 py-2 border rounded-lg bg-gray-50" />
     </div>
   </div>
 );
 
 const Select = ({ label, options, ...props }) => (
   <div>
-    <label className="block text-sm font-medium mb-2 text-gray-700">
-      {label}
-    </label>
-    <select
-      {...props}
-      className="w-full px-4 py-2 border rounded-lg bg-gray-50"
-      style={{ borderColor: COLORS.border }}
-    >
-      <option value="" disabled>
-        Select {label.toLowerCase()}
-      </option>
+    <label className="block text-sm font-medium mb-2 text-gray-700">{label}</label>
+    <select {...props} className="w-full px-4 py-2 border rounded-lg bg-gray-50">
+      <option value="">Select {label.toLowerCase()}</option>
       {options.map((opt) => (
         <option key={opt} value={opt}>
           {opt}
@@ -235,15 +264,8 @@ const Select = ({ label, options, ...props }) => (
 
 const Textarea = ({ label, ...props }) => (
   <div className="md:col-span-2">
-    <label className="block text-sm font-medium mb-2 text-gray-700">
-      {label}
-    </label>
-    <textarea
-      {...props}
-      rows={3}
-      className="w-full px-4 py-2 border rounded-lg bg-gray-50 resize-none"
-      style={{ borderColor: COLORS.border }}
-    />
+    <label className="block text-sm font-medium mb-2 text-gray-700">{label}</label>
+    <textarea {...props} rows={3} className="w-full px-4 py-2 border rounded-lg bg-gray-50" />
   </div>
 );
 
