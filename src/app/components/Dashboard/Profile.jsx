@@ -57,7 +57,7 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
 
     try {
       const res = await fetch(API_URL, {
-        method: "POST",
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
