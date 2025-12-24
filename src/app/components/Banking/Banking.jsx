@@ -12,7 +12,7 @@ const StudentBankingProfile = ({ student, onUpdate, showToast }) => {
   });
 
   const [fieldErrors, setFieldErrors] = useState({});
-  const [alert, setAlert] = useState(null); // { type: "error" | "success", message }
+  const [alert, setAlert] = useState(null);
   const [loading, setLoading] = useState(false);
   const [hasExisting, setHasExisting] = useState(false);
 
@@ -22,19 +22,16 @@ const StudentBankingProfile = ({ student, onUpdate, showToast }) => {
 
     const fetchBankingDetails = async () => {
       setAlert(null);
-
       try {
         const res = await fetch(
           `https://seta-management-api-fvzc9.ondigitalocean.app/api/students/bankingDetails/${student.id}`
         );
 
-        // No banking details yet → NOT an error
         if (res.status === 404) {
           setHasExisting(false);
           return;
         }
 
-        // Real backend error
         if (!res.ok) {
           setAlert({
             type: "error",
@@ -68,19 +65,15 @@ const StudentBankingProfile = ({ student, onUpdate, showToast }) => {
   /* ---------------- Handle input changes ---------------- */
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-
-    // Clear field error on edit
     setFieldErrors((prev) => ({ ...prev, [e.target.name]: null }));
   };
 
   /* ---------------- Validation ---------------- */
   const validate = () => {
     const errors = {};
-
-    if (!form.bankName) errors.bankName = "Bank name is required";
+    if (!form.bankName.trim()) errors.bankName = "Bank name is required";
     if (!form.accountType) errors.accountType = "Account type is required";
-    if (!form.accountNumber) errors.accountNumber = "Account number is required";
-
+    if (!form.accountNumber.trim()) errors.accountNumber = "Account number is required";
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -90,10 +83,7 @@ const StudentBankingProfile = ({ student, onUpdate, showToast }) => {
     setAlert(null);
 
     if (!validate()) {
-      setAlert({
-        type: "error",
-        message: "Please fix the errors below and try again."
-      });
+      setAlert({ type: "error", message: "Please fix the errors below and try again." });
       return;
     }
 
@@ -101,9 +91,9 @@ const StudentBankingProfile = ({ student, onUpdate, showToast }) => {
 
     const payload = {
       user_id: student.id,
-      bank_name: form.bankName,
+      bank_name: form.bankName.trim(),
       account_type: form.accountType,
-      account_number: form.accountNumber
+      account_number: form.accountNumber.trim()
     };
 
     try {
@@ -120,27 +110,17 @@ const StudentBankingProfile = ({ student, onUpdate, showToast }) => {
       const data = await res.json();
 
       if (!res.ok) {
-        setAlert({
-          type: "error",
-          message: data.message || "Failed to save banking details."
-        });
+        setAlert({ type: "error", message: data.message || "Failed to save banking details." });
         return;
       }
 
       setHasExisting(true);
       onUpdate?.(payload);
-
-      setAlert({
-        type: "success",
-        message: "Banking details saved successfully."
-      });
+      setAlert({ type: "success", message: "Banking details saved successfully." });
 
     } catch (err) {
       console.error(err);
-      setAlert({
-        type: "error",
-        message: "Network error while saving details."
-      });
+      setAlert({ type: "error", message: "Network error while saving details." });
     } finally {
       setLoading(false);
     }
@@ -149,29 +129,17 @@ const StudentBankingProfile = ({ student, onUpdate, showToast }) => {
   /* ---------------- UI ---------------- */
   return (
     <div className="space-y-6">
-      <div
-        className="rounded-lg p-6 shadow-sm"
-        style={{ backgroundColor: COLORS.bgWhite }}
-      >
-        {/* Header */}
-        <h2 className="text-xl font-bold mb-4" style={{ color: COLORS.primary }}>
-          Banking Details
-        </h2>
+      <div className="rounded-lg p-6 shadow-sm" style={{ backgroundColor: COLORS.bgWhite }}>
+        <h2 className="text-xl font-bold mb-4" style={{ color: COLORS.primary }}>Banking Details</h2>
 
         {/* Inline Alert */}
         {alert && (
           <div
             className={`mb-6 flex items-center gap-3 rounded-lg px-4 py-3 text-sm ${
-              alert.type === "error"
-                ? "bg-red-50 text-red-700"
-                : "bg-green-50 text-green-700"
+              alert.type === "error" ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700"
             }`}
           >
-            {alert.type === "error" ? (
-              <AlertCircle className="w-5 h-5" />
-            ) : (
-              <CheckCircle className="w-5 h-5" />
-            )}
+            {alert.type === "error" ? <AlertCircle className="w-5 h-5" /> : <CheckCircle className="w-5 h-5" />}
             {alert.message}
           </div>
         )}
@@ -179,9 +147,7 @@ const StudentBankingProfile = ({ student, onUpdate, showToast }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Bank Name */}
           <div>
-            <label className="block text-sm font-medium mb-2">
-              Bank Name
-            </label>
+            <label className="block text-sm font-medium mb-2">Bank Name</label>
             <div className="relative">
               <Landmark className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
               <input
@@ -189,46 +155,32 @@ const StudentBankingProfile = ({ student, onUpdate, showToast }) => {
                 name="bankName"
                 value={form.bankName}
                 onChange={handleChange}
-                className={`w-full pl-10 pr-4 py-2 rounded-lg border focus:outline-none ${
-                  fieldErrors.bankName ? "border-red-500" : ""
-                }`}
+                className={`w-full pl-10 pr-4 py-2 rounded-lg border focus:outline-none ${fieldErrors.bankName ? "border-red-500" : ""}`}
               />
             </div>
-            {fieldErrors.bankName && (
-              <p className="mt-1 text-sm text-red-600">{fieldErrors.bankName}</p>
-            )}
+            {fieldErrors.bankName && <p className="mt-1 text-sm text-red-600">{fieldErrors.bankName}</p>}
           </div>
 
           {/* Account Type */}
           <div>
-            <label className="block text-sm font-medium mb-2">
-              Account Type
-            </label>
+            <label className="block text-sm font-medium mb-2">Account Type</label>
             <select
               name="accountType"
               value={form.accountType}
               onChange={handleChange}
-              className={`w-full px-4 py-2 rounded-lg border ${
-                fieldErrors.accountType ? "border-red-500" : ""
-              }`}
+              className={`w-full px-4 py-2 rounded-lg border ${fieldErrors.accountType ? "border-red-500" : ""}`}
             >
-            <option value="">Select account type</option>
-            <option value="savings">Savings</option>
-            <option value="cheque">Cheque</option>
-            <option value="current">Current</option>
+              <option value="">Select account type</option>
+              <option value="savings">Savings</option>
+              <option value="current">Current</option>
+              <option value="transmission">Transmission</option>
             </select>
-            {fieldErrors.accountType && (
-              <p className="mt-1 text-sm text-red-600">
-                {fieldErrors.accountType}
-              </p>
-            )}
+            {fieldErrors.accountType && <p className="mt-1 text-sm text-red-600">{fieldErrors.accountType}</p>}
           </div>
 
           {/* Account Number */}
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium mb-2">
-              Account Number
-            </label>
+            <label className="block text-sm font-medium mb-2">Account Number</label>
             <div className="relative">
               <Hash className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
               <input
@@ -236,16 +188,10 @@ const StudentBankingProfile = ({ student, onUpdate, showToast }) => {
                 name="accountNumber"
                 value={form.accountNumber}
                 onChange={handleChange}
-                className={`w-full pl-10 pr-4 py-2 rounded-lg border ${
-                  fieldErrors.accountNumber ? "border-red-500" : ""
-                }`}
+                className={`w-full pl-10 pr-4 py-2 rounded-lg border ${fieldErrors.accountNumber ? "border-red-500" : ""}`}
               />
             </div>
-            {fieldErrors.accountNumber && (
-              <p className="mt-1 text-sm text-red-600">
-                {fieldErrors.accountNumber}
-              </p>
-            )}
+            {fieldErrors.accountNumber && <p className="mt-1 text-sm text-red-600">{fieldErrors.accountNumber}</p>}
           </div>
         </div>
 
