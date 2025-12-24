@@ -21,15 +21,24 @@ const StudentBankingProfile = ({ student, onUpdate, showToast }) => {
     if (!student?.id) return;
 
     const fetchBankingDetails = async () => {
+      setAlert(null);
+
       try {
         const res = await fetch(
           `https://seta-management-api-fvzc9.ondigitalocean.app/api/students/bankingDetails/${student.id}`
         );
 
+        // No banking details yet → NOT an error
+        if (res.status === 404) {
+          setHasExisting(false);
+          return;
+        }
+
+        // Real backend error
         if (!res.ok) {
           setAlert({
             type: "error",
-            message: "Failed to load banking details. Please refresh."
+            message: "Unable to load banking details. Please try again later."
           });
           return;
         }
@@ -43,6 +52,7 @@ const StudentBankingProfile = ({ student, onUpdate, showToast }) => {
         });
 
         setHasExisting(true);
+
       } catch (err) {
         console.error(err);
         setAlert({
