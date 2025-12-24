@@ -132,7 +132,12 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
             disabled={!isEditing}
             onChange={(e) => handleChange("lastName", e.target.value)}
           />
-          <Input label="Student Number" value={formData.studentNumber || ""} disabled />
+          <Input label="Student Number"
+           value={formData.studentNumber || ""}
+           disabled={!isEditing}
+           onChange={(e) => handleChange("studentNumber", e.target.value)}
+          />
+
           <Input label="ID Number" value={formData.idNumber || ""} disabled />
 
           <IconInput
