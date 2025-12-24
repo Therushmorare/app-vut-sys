@@ -212,10 +212,10 @@ const StudentBankingProfile = ({ student, onUpdate, showToast }) => {
                 fieldErrors.accountType ? "border-red-500" : ""
               }`}
             >
-              <option value="">Select account type</option>
-              <option value="Savings">Savings</option>
-              <option value="Cheque">Cheque</option>
-              <option value="Current">Current</option>
+            <option value="">Select account type</option>
+            <option value="savings">Savings</option>
+            <option value="cheque">Cheque</option>
+            <option value="current">Current</option>
             </select>
             {fieldErrors.accountType && (
               <p className="mt-1 text-sm text-red-600">
