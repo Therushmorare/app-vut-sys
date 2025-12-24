@@ -10,75 +10,75 @@ const API_URL =
 
 const StudentProfile = ({ student, onUpdate, showToast }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState(student || {});
+  const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(false);
-  const [apiError, setApiError] = useState(null); // <-- API error state
+  const [apiError, setApiError] = useState(null);
 
   useEffect(() => {
     setFormData(student || {});
-    setApiError(null); // reset error if student changes
+    setApiError(null);
   }, [student]);
 
   const handleChange = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-    setApiError(null); // reset error when user edits
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    setApiError(null);
   };
 
   const handleSave = async () => {
-    if (!formData?.user_id && !formData?.id) {
+    const userId = formData.user_id || formData.id;
+
+    if (!userId) {
       setApiError("Missing student ID");
       return;
     }
 
     setLoading(true);
 
+    /* ================= PAYLOAD (BACKEND SAFE) ================= */
     const payload = {
-      user_id: formData.user_id || formData.id,
-      first_name: formData.firstName,
-      last_name: formData.lastName,
-      email: formData.email,
-      phone_number: formData.phone,
-      date_of_birth: formData.dateOfBirth,
-      gender: formData.gender,
-      ID_number: formData.idNumber,
-      address: formData.address,
-      student_number: formData.studentNumber,
-      faculty: formData.faculty,
+      user_id: userId,
+      first_name: formData.firstName?.trim(),
+      last_name: formData.lastName?.trim(),
+      email: formData.email?.trim(),
+      phone_number: formData.phone?.trim(),
+      date_of_birth: formData.dateOfBirth || undefined,
+      gender: formData.gender?.toLowerCase(),
+      id_number: formData.idNumber?.trim(),
+      address: formData.address?.trim(),
+      student_number: formData.studentNumber?.trim(),
+      faculty: formData.faculty?.trim(),
     };
 
+    // Remove empty / undefined fields
     Object.keys(payload).forEach(
-      (key) => (payload[key] === undefined || payload[key] === "") && delete payload[key]
+      (key) =>
+        (payload[key] === undefined ||
+          payload[key] === null ||
+          payload[key] === "") &&
+        delete payload[key]
     );
 
     try {
       const res = await fetch(API_URL, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setApiError(data?.message || "Profile update failed");
+        setApiError(data?.message || "Input payload validation failed");
         showToast?.(data?.message || "Profile update failed", "error");
         return;
       }
 
-      if (typeof onUpdate === "function") {
-        onUpdate(data.student);
-      }
-
+      onUpdate?.(data.student);
       setIsEditing(false);
       setApiError(null);
-      showToast?.("Profile updated successfully!", "success");
+      showToast?.("Profile updated successfully", "success");
     } catch (err) {
-      console.error("Profile update error:", err);
+      console.error(err);
       setApiError("Server error while updating profile");
       showToast?.("Server error while updating profile", "error");
     } finally {
@@ -94,23 +94,25 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
 
   return (
     <div className="space-y-6">
-      {/* ================= PERSONAL INFO ================= */}
       <Section
         title="Personal Information"
         action={
           !isEditing ? (
-            <PrimaryButton onClick={() => setIsEditing(true)}>Edit Profile</PrimaryButton>
+            <PrimaryButton onClick={() => setIsEditing(true)}>
+              Edit Profile
+            </PrimaryButton>
           ) : (
             <div className="flex gap-2">
               <SuccessButton onClick={handleSave} disabled={loading}>
                 {loading ? "Saving..." : "Save Changes"}
               </SuccessButton>
-              <SecondaryButton onClick={handleCancel}>Cancel</SecondaryButton>
+              <SecondaryButton onClick={handleCancel}>
+                Cancel
+              </SecondaryButton>
             </div>
           )
         }
       >
-        {/* ===== Display API errors here ===== */}
         {apiError && (
           <div className="mb-4 p-3 rounded bg-red-100 text-red-700 border border-red-300">
             {apiError}
@@ -151,7 +153,6 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
         </Grid>
       </Section>
 
-      {/* ================= BIOGRAPHICAL ================= */}
       <Section title="Biographical Information">
         <Grid>
           <Input
@@ -177,7 +178,6 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
         </Grid>
       </Section>
 
-      {/* ================= ACADEMIC ================= */}
       <Section title="Academic Information">
         <Grid>
           <Input label="Faculty" value={formData.faculty || ""} disabled />
