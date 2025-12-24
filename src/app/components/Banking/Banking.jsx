@@ -21,7 +21,7 @@ const StudentBankingProfile = ({ student, onUpdate, showToast }) => {
     const fetchBankingDetails = async () => {
       try {
         const res = await fetch(
-          `/api/students/bankingDetails/${student.id}`
+          `https://seta-management-api-fvzc9.ondigitalocean.app/api/students/bankingDetails/${student.id}`
         );
 
         if (!res.ok) return;
@@ -66,8 +66,8 @@ const StudentBankingProfile = ({ student, onUpdate, showToast }) => {
 
     try {
       const endpoint = hasExisting
-        ? "/api/students/banking-details/update"
-        : "/api/students/banking-details";
+        ? "https://seta-management-api-fvzc9.ondigitalocean.app/api/students/banking-details/update"
+        : "https://seta-management-api-fvzc9.ondigitalocean.app/api/students/banking-details";
 
       const res = await fetch(endpoint, {
         method: "POST",
