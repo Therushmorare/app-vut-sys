@@ -8,105 +8,77 @@ import { formatDate } from "../../utils/date";
 const API_URL =
   "https://seta-management-api-fvzc9.ondigitalocean.app/api/students/student/profile/update";
 
-const REQUIRED_FIELDS = [
-  "firstName",
-  "lastName",
-  "email",
-  "phone",
-  "dateOfBirth",
-  "gender",
-  "idNumber",
-  "address",
-  "studentNumber",
-  "faculty",
-  "programme",
-];
-
 const StudentProfile = ({ student, onUpdate, showToast }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState(student || {});
   const [loading, setLoading] = useState(false);
-  const [apiError, setApiError] = useState(null);
+  const [apiError, setApiError] = useState(null); // <-- API error state
 
   useEffect(() => {
-    if (student) {
-      setFormData({
-        ...student,
-        gender: student.gender?.toLowerCase() || "",
-      });
-    }
-    setApiError(null);
+    setFormData(student || {});
+    setApiError(null); // reset error if student changes
   }, [student]);
 
   const handleChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    setApiError(null);
-  };
-
-  /* ================= FRONTEND VALIDATION ================= */
-  const validateForm = () => {
-    for (const field of REQUIRED_FIELDS) {
-      if (!formData[field] || formData[field].toString().trim() === "") {
-        return `All fields are required. Missing: ${field}`;
-      }
-    }
-    return null;
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+    setApiError(null); // reset error when user edits
   };
 
   const handleSave = async () => {
-    const userId = formData.user_id || formData.id;
-
-    if (!userId) {
+    if (!formData?.user_id && !formData?.id) {
       setApiError("Missing student ID");
-      return;
-    }
-
-    const validationError = validateForm();
-    if (validationError) {
-      setApiError(validationError);
-      showToast?.(validationError, "error");
       return;
     }
 
     setLoading(true);
 
-    /* ================= BACKEND-COMPATIBLE PAYLOAD ================= */
     const payload = {
-      user_id: userId,
-      first_name: formData.firstName.trim(),
-      last_name: formData.lastName.trim(),
-      email: formData.email.trim(),
-      phone_number: formData.phone.trim(),
+      user_id: formData.user_id || formData.id,
+      first_name: formData.firstName,
+      last_name: formData.lastName,
+      email: formData.email,
+      phone_number: formData.phone,
       date_of_birth: formData.dateOfBirth,
-      gender: formData.gender.toLowerCase(),
-      ID_number: formData.idNumber.trim(),
-      address: formData.address.trim(),
-      student_number: formData.studentNumber.trim(),
-      faculty: formData.faculty.trim(),
-      programme: formData.programme.trim(),
+      gender: formData.gender,
+      ID_number: formData.idNumber,
+      address: formData.address,
+      student_number: formData.studentNumber,
+      faculty: formData.faculty,
     };
+
+    Object.keys(payload).forEach(
+      (key) => (payload[key] === undefined || payload[key] === "") && delete payload[key]
+    );
 
     try {
       const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(payload),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setApiError(data?.message || "Input payload validation failed");
+        setApiError(data?.message || "Profile update failed");
         showToast?.(data?.message || "Profile update failed", "error");
         return;
       }
 
-      onUpdate?.(data.student);
+      if (typeof onUpdate === "function") {
+        onUpdate(data.student);
+      }
+
       setIsEditing(false);
       setApiError(null);
-      showToast?.("Profile updated successfully", "success");
+      showToast?.("Profile updated successfully!", "success");
     } catch (err) {
-      console.error(err);
+      console.error("Profile update error:", err);
       setApiError("Server error while updating profile");
       showToast?.("Server error while updating profile", "error");
     } finally {
@@ -122,25 +94,23 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
 
   return (
     <div className="space-y-6">
+      {/* ================= PERSONAL INFO ================= */}
       <Section
         title="Personal Information"
         action={
           !isEditing ? (
-            <PrimaryButton onClick={() => setIsEditing(true)}>
-              Edit Profile
-            </PrimaryButton>
+            <PrimaryButton onClick={() => setIsEditing(true)}>Edit Profile</PrimaryButton>
           ) : (
             <div className="flex gap-2">
               <SuccessButton onClick={handleSave} disabled={loading}>
                 {loading ? "Saving..." : "Save Changes"}
               </SuccessButton>
-              <SecondaryButton onClick={handleCancel}>
-                Cancel
-              </SecondaryButton>
+              <SecondaryButton onClick={handleCancel}>Cancel</SecondaryButton>
             </div>
           )
         }
       >
+        {/* ===== Display API errors here ===== */}
         {apiError && (
           <div className="mb-4 p-3 rounded bg-red-100 text-red-700 border border-red-300">
             {apiError}
@@ -148,52 +118,75 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
         )}
 
         <Grid>
-          <Input label="First Name" value={formData.firstName || ""} disabled={!isEditing}
-            onChange={(e) => handleChange("firstName", e.target.value)} />
-
-          <Input label="Last Name" value={formData.lastName || ""} disabled={!isEditing}
-            onChange={(e) => handleChange("lastName", e.target.value)} />
-
-          <Input label="Student Number" value={formData.studentNumber || ""} disabled={!isEditing}
-            onChange={(e) => handleChange("studentNumber", e.target.value)} />
-
+          <Input
+            label="First Name"
+            value={formData.firstName || ""}
+            disabled={!isEditing}
+            onChange={(e) => handleChange("firstName", e.target.value)}
+          />
+          <Input
+            label="Last Name"
+            value={formData.lastName || ""}
+            disabled={!isEditing}
+            onChange={(e) => handleChange("lastName", e.target.value)}
+          />
+          <Input label="Student Number" value={formData.studentNumber || ""} disabled />
           <Input label="ID Number" value={formData.idNumber || ""} disabled />
 
-          <IconInput label="Email Address" icon={<Mail className="w-5 h-5 text-gray-400" />}
-            value={formData.email || ""} disabled={!isEditing}
-            onChange={(e) => handleChange("email", e.target.value)} />
+          <IconInput
+            label="Email Address"
+            icon={<Mail className="w-5 h-5 text-gray-400" />}
+            value={formData.email || ""}
+            disabled={!isEditing}
+            onChange={(e) => handleChange("email", e.target.value)}
+          />
 
-          <IconInput label="Phone Number" icon={<Phone className="w-5 h-5 text-gray-400" />}
-            value={formData.phone || ""} disabled={!isEditing}
-            onChange={(e) => handleChange("phone", e.target.value)} />
+          <IconInput
+            label="Phone Number"
+            icon={<Phone className="w-5 h-5 text-gray-400" />}
+            value={formData.phone || ""}
+            disabled={!isEditing}
+            onChange={(e) => handleChange("phone", e.target.value)}
+          />
         </Grid>
       </Section>
 
+      {/* ================= BIOGRAPHICAL ================= */}
       <Section title="Biographical Information">
         <Grid>
-          <Input type="date" label="Date of Birth" value={formData.dateOfBirth || ""}
+          <Input
+            label="Date of Birth"
+            type="date"
+            value={formData.dateOfBirth || ""}
             disabled={!isEditing}
-            onChange={(e) => handleChange("dateOfBirth", e.target.value)} />
-
-          <Select label="Gender" value={formData.gender || ""} disabled={!isEditing}
+            onChange={(e) => handleChange("dateOfBirth", e.target.value)}
+          />
+          <Select
+            label="Gender"
+            value={formData.gender || ""}
+            disabled={!isEditing}
             onChange={(e) => handleChange("gender", e.target.value)}
-            options={["male", "female", "other"]} />
-
-          <Textarea label="Address" value={formData.address || ""}
+            options={["Male", "Female", "Other"]}
+          />
+          <Textarea
+            label="Address"
+            value={formData.address || ""}
             disabled={!isEditing}
-            onChange={(e) => handleChange("address", e.target.value)} />
+            onChange={(e) => handleChange("address", e.target.value)}
+          />
         </Grid>
       </Section>
 
+      {/* ================= ACADEMIC ================= */}
       <Section title="Academic Information">
         <Grid>
-          <Input label="Faculty" value={formData.faculty || ""} disabled={!isEditing}
-            onChange={(e) => handleChange("faculty", e.target.value)} />
-
-          <Input label="Programme" value={formData.programme || ""} disabled={!isEditing}
-            onChange={(e) => handleChange("programme", e.target.value)} />
-
-          <Input label="Registration Date" value={formatDate(formData.registrationDate)} disabled />
+          <Input label="Faculty" value={formData.faculty || ""} disabled />
+          <Input label="Programme" value={formData.programme || ""} disabled />
+          <Input
+            label="Registration Date"
+            value={formatDate(formData.registrationDate)}
+            disabled
+          />
           <Input label="Status" value={formData.status || ""} disabled />
         </Grid>
       </Section>
@@ -214,9 +207,7 @@ const Section = ({ title, action, children }) => (
   </div>
 );
 
-const Grid = ({ children }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">{children}</div>
-);
+const Grid = ({ children }) => <div className="grid grid-cols-1 md:grid-cols-2 gap-6">{children}</div>;
 
 const ButtonBase = ({ children, ...props }) => (
   <button {...props} className="px-4 py-2 rounded-lg text-sm font-medium">
@@ -240,7 +231,6 @@ const Input = ({ label, ...props }) => (
     <input {...props} className="w-full px-4 py-2 border rounded-lg bg-gray-50" />
   </div>
 );
-
 const IconInput = ({ label, icon, ...props }) => (
   <div>
     <label className="block text-sm font-medium mb-2 text-gray-700">{label}</label>
@@ -250,7 +240,6 @@ const IconInput = ({ label, icon, ...props }) => (
     </div>
   </div>
 );
-
 const Select = ({ label, options, ...props }) => (
   <div>
     <label className="block text-sm font-medium mb-2 text-gray-700">{label}</label>
@@ -264,7 +253,6 @@ const Select = ({ label, options, ...props }) => (
     </select>
   </div>
 );
-
 const Textarea = ({ label, ...props }) => (
   <div className="md:col-span-2">
     <label className="block text-sm font-medium mb-2 text-gray-700">{label}</label>
