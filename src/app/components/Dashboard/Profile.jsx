@@ -171,7 +171,7 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
             value={formData.gender || ""}
             disabled={!isEditing}
             onChange={(e) => handleChange("gender", e.target.value)}
-            options={["Male", "Female", "Other"]}
+            options={["male", "female", "other"]}
           />
           <Textarea
             label="Address"
