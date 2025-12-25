@@ -37,16 +37,16 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
     /* ================= PAYLOAD (BACKEND SAFE) ================= */
     const payload = {
       user_id: userId,
-      first_name: formData.firstName?.trim(),
-      last_name: formData.lastName?.trim(),
-      email: formData.email?.trim(),
-      phone_number: formData.phone?.trim(),
-      date_of_birth: formData.dateOfBirth || undefined,
-      gender: formData.gender?.toLowerCase(),
-      id_number: formData.idNumber?.trim(),
-      address: formData.address?.trim(),
-      student_number: formData.studentNumber?.trim(),
-      faculty: formData.faculty?.trim(),
+      first_name: formData.firstName.trim(),
+      last_name: formData.lastName.trim(),
+      email: formData.email.trim(),
+      phone_number: formData.phone.trim(),
+      date_of_birth: formData.dateOfBirth,
+      gender: formData.gender.toLowerCase(),
+      ID_number: formData.idNumber.trim(), //FIXED
+      address: formData.address.trim(),
+      student_number: formData.studentNumber.trim(),
+      faculty: formData.faculty.trim(),
       programme: formData.programme?.trim(),
     };
 
