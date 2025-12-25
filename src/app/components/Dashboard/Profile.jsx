@@ -10,56 +10,57 @@ const API_URL =
 
 const StudentProfile = ({ student, onUpdate, showToast }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState(student || {});
+  const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(false);
-  const [apiError, setApiError] = useState(null); // <-- API error state
+  const [apiError, setApiError] = useState(null);
 
+  /* ================= INIT FROM BACKEND ================= */
   useEffect(() => {
-    setFormData(student || {});
-    setApiError(null); // reset error if student changes
+    if (!student) return;
+
+    setFormData({
+      ...student,
+      gender: student.gender?.toLowerCase() || "",
+    });
+    setApiError(null);
   }, [student]);
 
   const handleChange = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-    setApiError(null); // reset error when user edits
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    setApiError(null);
   };
 
+  /* ================= SAVE ================= */
   const handleSave = async () => {
-    if (!formData?.user_id && !formData?.id) {
+    const userId = formData.user_id || formData.id;
+
+    if (!userId) {
       setApiError("Missing student ID");
       return;
     }
 
     setLoading(true);
 
+    /* ✅ BACKEND-EXACT PAYLOAD (DO NOT DELETE FIELDS) */
     const payload = {
-      user_id: formData.user_id || formData.id,
-      first_name: formData.firstName,
-      last_name: formData.lastName,
-      email: formData.email,
-      phone_number: formData.phone,
+      user_id: userId,
+      first_name: formData.firstName?.trim(),
+      last_name: formData.lastName?.trim(),
+      email: formData.email?.trim().toLowerCase(),
+      phone_number: formData.phone?.trim(),
       date_of_birth: formData.dateOfBirth,
-      gender: formData.gender,
-      ID_number: formData.idNumber,
-      address: formData.address,
-      student_number: formData.studentNumber,
-      faculty: formData.faculty,
-      programme: formData.programme
+      gender: formData.gender?.toLowerCase(),
+      ID_number: formData.idNumber?.trim(),
+      address: formData.address?.trim(),
+      student_number: formData.studentNumber?.trim(),
+      faculty: formData.faculty?.trim(),
+      programme: formData.programme?.trim(),
     };
-
-    Object.keys(payload).forEach(
-      (key) => (payload[key] === undefined || payload[key] === "") && delete payload[key]
-    );
 
     try {
       const res = await fetch(API_URL, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
@@ -71,10 +72,24 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
         return;
       }
 
-      if (typeof onUpdate === "function") {
-        onUpdate(data.student);
-      }
+      /* ✅ MAP BACKEND RESPONSE → FRONTEND STATE */
+      const updatedStudent = {
+        ...formData,
+        firstName: data.first_name,
+        lastName: data.last_name,
+        email: data.email,
+        phone: data.phone_number,
+        dateOfBirth: data.date_of_birth,
+        gender: data.gender,
+        idNumber: data.ID_number,
+        address: data.address,
+        studentNumber: data.student_number,
+        faculty: data.faculty,
+        programme: data.programme,
+      };
 
+      onUpdate?.(updatedStudent);
+      setFormData(updatedStudent);
       setIsEditing(false);
       setApiError(null);
       showToast?.("Profile updated successfully!", "success");
@@ -100,7 +115,9 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
         title="Personal Information"
         action={
           !isEditing ? (
-            <PrimaryButton onClick={() => setIsEditing(true)}>Edit Profile</PrimaryButton>
+            <PrimaryButton onClick={() => setIsEditing(true)}>
+              Edit Profile
+            </PrimaryButton>
           ) : (
             <div className="flex gap-2">
               <SuccessButton onClick={handleSave} disabled={loading}>
@@ -111,7 +128,6 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
           )
         }
       >
-        {/* ===== Display API errors here ===== */}
         {apiError && (
           <div className="mb-4 p-3 rounded bg-red-100 text-red-700 border border-red-300">
             {apiError}
@@ -119,79 +135,54 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
         )}
 
         <Grid>
-          <Input
-            label="First Name"
-            value={formData.firstName || ""}
-            disabled={!isEditing}
-            onChange={(e) => handleChange("firstName", e.target.value)}
-          />
-          <Input
-            label="Last Name"
-            value={formData.lastName || ""}
-            disabled={!isEditing}
-            onChange={(e) => handleChange("lastName", e.target.value)}
-          />
-          <Input label="Student Number" 
-          value={formData.studentNumber || ""} 
-          disabled={!isEditing}
-          onChange={(e) => handleChange("studentNumber", e.target.value)}
-          />
+          <Input label="First Name" value={formData.firstName || ""} disabled={!isEditing}
+            onChange={(e) => handleChange("firstName", e.target.value)} />
+
+          <Input label="Last Name" value={formData.lastName || ""} disabled={!isEditing}
+            onChange={(e) => handleChange("lastName", e.target.value)} />
+
+          <Input label="Student Number" value={formData.studentNumber || ""} disabled={!isEditing}
+            onChange={(e) => handleChange("studentNumber", e.target.value)} />
+
           <Input label="ID Number" value={formData.idNumber || ""} disabled />
 
-          <IconInput
-            label="Email Address"
-            icon={<Mail className="w-5 h-5 text-gray-400" />}
-            value={formData.email || ""}
-            disabled={!isEditing}
-            onChange={(e) => handleChange("email", e.target.value)}
-          />
+          <IconInput label="Email Address" icon={<Mail className="w-5 h-5 text-gray-400" />}
+            value={formData.email || ""} disabled={!isEditing}
+            onChange={(e) => handleChange("email", e.target.value)} />
 
-          <IconInput
-            label="Phone Number"
-            icon={<Phone className="w-5 h-5 text-gray-400" />}
-            value={formData.phone || ""}
-            disabled={!isEditing}
-            onChange={(e) => handleChange("phone", e.target.value)}
-          />
+          <IconInput label="Phone Number" icon={<Phone className="w-5 h-5 text-gray-400" />}
+            value={formData.phone || ""} disabled={!isEditing}
+            onChange={(e) => handleChange("phone", e.target.value)} />
         </Grid>
       </Section>
 
       {/* ================= BIOGRAPHICAL ================= */}
       <Section title="Biographical Information">
         <Grid>
-          <Input
-            label="Date of Birth"
-            type="date"
-            value={formData.dateOfBirth || ""}
+          <Input type="date" label="Date of Birth" value={formData.dateOfBirth || ""}
             disabled={!isEditing}
-            onChange={(e) => handleChange("dateOfBirth", e.target.value)}
-          />
-          <Select
-            label="Gender"
-            value={formData.gender || ""}
-            disabled={!isEditing}
+            onChange={(e) => handleChange("dateOfBirth", e.target.value)} />
+
+          <Select label="Gender" value={formData.gender || ""} disabled={!isEditing}
             onChange={(e) => handleChange("gender", e.target.value)}
-            options={["male", "female", "other"]}
-          />
-          <Textarea
-            label="Address"
-            value={formData.address || ""}
+            options={["male", "female", "other"]} />
+
+          <Textarea label="Address" value={formData.address || ""}
             disabled={!isEditing}
-            onChange={(e) => handleChange("address", e.target.value)}
-          />
+            onChange={(e) => handleChange("address", e.target.value)} />
         </Grid>
       </Section>
 
       {/* ================= ACADEMIC ================= */}
       <Section title="Academic Information">
         <Grid>
-          <Input label="Faculty" value={formData.faculty || ""} />
-          <Input label="Programme" value={formData.programme || ""} />
-          <Input
-            label="Registration Date"
-            value={formatDate(formData.registrationDate)}
-            disabled
-          />
+          <Input label="Faculty" value={formData.faculty || ""} disabled={!isEditing}
+            onChange={(e) => handleChange("faculty", e.target.value)} />
+
+          <Input label="Programme" value={formData.programme || ""} disabled={!isEditing}
+            onChange={(e) => handleChange("programme", e.target.value)} />
+
+          <Input label="Registration Date" value={formatDate(formData.registrationDate)} disabled />
           <Input label="Status" value={formData.status || ""} disabled />
         </Grid>
       </Section>
@@ -199,7 +190,7 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
   );
 };
 
-/* ================= UI HELPERS ================= */
+/* ================= UI HELPERS (UNCHANGED) ================= */
 const Section = ({ title, action, children }) => (
   <div className="rounded-lg p-6 shadow-sm" style={{ backgroundColor: COLORS.bgWhite }}>
     <div className="flex justify-between items-center mb-6">
@@ -212,7 +203,9 @@ const Section = ({ title, action, children }) => (
   </div>
 );
 
-const Grid = ({ children }) => <div className="grid grid-cols-1 md:grid-cols-2 gap-6">{children}</div>;
+const Grid = ({ children }) => (
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">{children}</div>
+);
 
 const ButtonBase = ({ children, ...props }) => (
   <button {...props} className="px-4 py-2 rounded-lg text-sm font-medium">
@@ -236,6 +229,7 @@ const Input = ({ label, ...props }) => (
     <input {...props} className="w-full px-4 py-2 border rounded-lg bg-gray-50" />
   </div>
 );
+
 const IconInput = ({ label, icon, ...props }) => (
   <div>
     <label className="block text-sm font-medium mb-2 text-gray-700">{label}</label>
@@ -245,19 +239,19 @@ const IconInput = ({ label, icon, ...props }) => (
     </div>
   </div>
 );
+
 const Select = ({ label, options, ...props }) => (
   <div>
     <label className="block text-sm font-medium mb-2 text-gray-700">{label}</label>
     <select {...props} className="w-full px-4 py-2 border rounded-lg bg-gray-50">
       <option value="">Select {label.toLowerCase()}</option>
       {options.map((opt) => (
-        <option key={opt} value={opt}>
-          {opt}
-        </option>
+        <option key={opt} value={opt}>{opt}</option>
       ))}
     </select>
   </div>
 );
+
 const Textarea = ({ label, ...props }) => (
   <div className="md:col-span-2">
     <label className="block text-sm font-medium mb-2 text-gray-700">{label}</label>
