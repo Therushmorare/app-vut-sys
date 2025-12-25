@@ -47,6 +47,7 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
       address: formData.address?.trim(),
       student_number: formData.studentNumber?.trim(),
       faculty: formData.faculty?.trim(),
+      programme: formData.programme?.trim(),
     };
 
     // Remove empty / undefined fields
@@ -185,8 +186,8 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
 
       <Section title="Academic Information">
         <Grid>
-          <Input label="Faculty" value={formData.faculty || ""} disabled />
-          <Input label="Programme" value={formData.programme || ""} disabled />
+          <Input label="Faculty" value={formData.faculty || ""}  />
+          <Input label="Programme" value={formData.programme || ""} />
           <Input
             label="Registration Date"
             value={formatDate(formData.registrationDate)}
