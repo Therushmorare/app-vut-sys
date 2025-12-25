@@ -47,6 +47,7 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
       address: formData.address,
       student_number: formData.studentNumber,
       faculty: formData.faculty,
+      programme: formData.programme
     };
 
     Object.keys(payload).forEach(
@@ -55,7 +56,7 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
 
     try {
       const res = await fetch(API_URL, {
-        method: "PUT",
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
@@ -130,7 +131,7 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
             disabled={!isEditing}
             onChange={(e) => handleChange("lastName", e.target.value)}
           />
-          <Input label="Student Number" value={formData.studentNumber || ""} disabled />
+          <Input label="Student Number" value={formData.studentNumber || ""} />
           <Input label="ID Number" value={formData.idNumber || ""} disabled />
 
           <IconInput
@@ -180,8 +181,8 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
       {/* ================= ACADEMIC ================= */}
       <Section title="Academic Information">
         <Grid>
-          <Input label="Faculty" value={formData.faculty || ""} disabled />
-          <Input label="Programme" value={formData.programme || ""} disabled />
+          <Input label="Faculty" value={formData.faculty || ""} />
+          <Input label="Programme" value={formData.programme || ""} />
           <Input
             label="Registration Date"
             value={formatDate(formData.registrationDate)}
