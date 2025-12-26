@@ -61,38 +61,21 @@ const StudentBiographic = ({ student, onUpdate, showToast }) => {
         payload
       );
 
-      // Success
       if (res.status === 200) {
         const updatedStudent = {
           ...student,
-          date_of_birth: res.data.date_of_birth ?? formData.dateOfBirth,
-          gender: res.data.gender ?? formData.gender,
-          address: res.data.address ?? formData.address,
+          ...res.data, // merge all backend fields into student
         };
+
         setFormData(apiToForm(updatedStudent));
         onUpdate?.(updatedStudent);
-        showToast?.(
-          res.data?.message || "Biographical details updated successfully!",
-          "success"
-        );
+
+        showToast?.(res.data.message || "Biographical details updated successfully!", "success");
         setErrors({});
-      } else {
-        showToast?.("Update failed", "error");
       }
     } catch (err) {
       console.error("Update error:", err);
 
-      // Map field-specific backend errors if available
-      if (err.response?.data?.errors) {
-        const backendErrors = err.response.data.errors;
-        const fieldErrors = {};
-        Object.keys(backendErrors).forEach((key) => {
-          fieldErrors[key] = backendErrors[key][0]; // take first message
-        });
-        setErrors(fieldErrors);
-      }
-
-      // Show backend message
       const message =
         err.response?.data?.message || "Failed to update biographical details";
       showToast?.(message, "error");
@@ -115,7 +98,7 @@ const StudentBiographic = ({ student, onUpdate, showToast }) => {
       >
         <Grid>
           {/* Date of Birth */}
-          <Field label="Date of Birth" error={errors.date_of_birth || errors.dateOfBirth}>
+          <Field label="Date of Birth" error={errors.dateOfBirth}>
             <input
               type="date"
               value={formData.dateOfBirth}
