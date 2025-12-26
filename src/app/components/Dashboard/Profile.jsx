@@ -8,35 +8,60 @@ import { formatDate } from "../../utils/date";
 const API_URL =
   "https://seta-management-api-fvzc9.ondigitalocean.app/api/students/student/profile/update";
 
-// ================= NORMALIZE BACKEND DATA TO FRONTEND =================
-const normalizeStudent = (student) => ({
-  id: student.id,
-  user_id: student.user_id ?? student.id,
-  firstName: student.first_name ?? "",
-  lastName: student.last_name ?? "",
-  email: student.email ?? "",
-  phone: student.phone_number ?? "",
-  dateOfBirth: student.date_of_birth ?? "",
-  gender: student.gender ?? "",
-  idNumber: student.ID_number ?? "",
-  address: student.address ?? "",
-  studentNumber: student.student_number ?? "",
-  faculty: student.faculty ?? "",
-  programme: student.programme ?? "",
-  registrationDate: student.registration_date ?? "",
-  status: student.status ?? "",
+/* ================= NORMALIZERS ================= */
+const apiToForm = (s) => ({
+  userId: s.user_id ?? s.id,
+  firstName: s.first_name ?? "",
+  lastName: s.last_name ?? "",
+  email: s.email ?? "",
+  phone: s.phone_number ?? "",
+  dateOfBirth: s.date_of_birth ?? "",
+  gender: s.gender?.toLowerCase() ?? "",
+  idNumber: s.ID_number ?? "",
+  address: s.address ?? "",
+  studentNumber: s.student_number ?? "",
+  faculty: s.faculty ?? "",
+  programme: s.programme ?? "",
+  registrationDate: s.registration_date ?? "",
+  status: s.status ?? "",
 });
 
+const formToApi = (f) => ({
+  user_id: f.userId,
+  first_name: f.firstName.trim(),
+  last_name: f.lastName.trim(),
+  email: f.email.trim().toLowerCase(),
+  phone_number: f.phone.trim(),
+  date_of_birth: f.dateOfBirth || null,
+  gender: f.gender,
+  ID_number: f.idNumber,
+  address: f.address.trim(),
+  student_number: f.studentNumber.trim(),
+  faculty: f.faculty.trim(),
+  programme: f.programme.trim(),
+});
+
+/* ================= VALIDATION ================= */
+const validateForm = (f) => {
+  if (!f.firstName.trim()) return "First name is required";
+  if (!f.lastName.trim()) return "Last name is required";
+  if (!f.email.trim()) return "Email is required";
+  if (!f.phone.trim()) return "Phone number is required";
+  if (!f.studentNumber.trim()) return "Student number is required";
+  if (!f.gender) return "Gender is required";
+  return null;
+};
+
 const StudentProfile = ({ student, onUpdate, showToast }) => {
+  const [formData, setFormData] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
 
-  // ================= INIT FROM BACKEND =================
+  /* ================= INIT ================= */
   useEffect(() => {
     if (!student) return;
-    setFormData(normalizeStudent(student));
+    setFormData(apiToForm(student));
     setApiError(null);
   }, [student]);
 
@@ -45,72 +70,60 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
     setApiError(null);
   };
 
-  // ================= SAVE =================
+  /* ================= SAVE ================= */
   const handleSave = async () => {
-    const userId = formData.user_id || formData.id;
-    if (!userId) {
-      setApiError("Missing student ID");
+    const error = validateForm(formData);
+    if (error) {
+      setApiError(error);
+      showToast?.(error, "error");
       return;
     }
 
     setLoading(true);
 
-    const payload = {
-      user_id: userId,
-      first_name: formData.firstName.trim(),
-      last_name: formData.lastName.trim(),
-      email: formData.email.trim().toLowerCase(),
-      phone_number: formData.phone.trim(),
-      date_of_birth: formData.dateOfBirth,
-      gender: formData.gender.toLowerCase(),
-      ID_number: formData.idNumber.trim(),
-      address: formData.address.trim(),
-      student_number: formData.studentNumber.trim(),
-      faculty: formData.faculty.trim(),
-      programme: formData.programme.trim(),
-    };
-
     try {
       const res = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(formToApi(formData)),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setApiError(data?.message || "Profile update failed");
-        showToast?.(data?.message || "Profile update failed", "error");
-        return;
+        throw new Error(data?.message || "Profile update failed");
       }
 
-      // ✅ Normalize backend response
-      const normalized = normalizeStudent(data);
+      const updatedStudent = apiToForm(data);
 
-      setFormData(normalized);
-      onUpdate?.(normalized);
+      // 🔐 AUTH SAFETY CHECK
+      if (!updatedStudent.userId || !updatedStudent.email) {
+        throw new Error("Invalid profile response from server");
+      }
+
+      setFormData(updatedStudent);
+      onUpdate?.(updatedStudent);
       setIsEditing(false);
-      setApiError(null);
       showToast?.("Profile updated successfully!", "success");
     } catch (err) {
-      console.error("Profile update error:", err);
-      setApiError("Server error while updating profile");
-      showToast?.("Server error while updating profile", "error");
+      console.error(err);
+      setApiError(err.message);
+      showToast?.(err.message, "error");
     } finally {
       setLoading(false);
     }
   };
 
   const handleCancel = () => {
+    setFormData(apiToForm(student));
     setIsEditing(false);
-    setFormData(normalizeStudent(student));
     setApiError(null);
   };
 
+  if (!formData) return null;
+
   return (
     <div className="space-y-6">
-      {/* ================= PERSONAL INFO ================= */}
       <Section
         title="Personal Information"
         action={
@@ -123,7 +136,9 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
               <SuccessButton onClick={handleSave} disabled={loading}>
                 {loading ? "Saving..." : "Save Changes"}
               </SuccessButton>
-              <SecondaryButton onClick={handleCancel}>Cancel</SecondaryButton>
+              <SecondaryButton onClick={handleCancel}>
+                Cancel
+              </SecondaryButton>
             </div>
           )
         }
@@ -135,88 +150,52 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
         )}
 
         <Grid>
-          <Input
-            label="First Name"
-            value={formData.firstName}
-            disabled={!isEditing}
-            onChange={(e) => handleChange("firstName", e.target.value)}
-          />
-          <Input
-            label="Last Name"
-            value={formData.lastName}
-            disabled={!isEditing}
-            onChange={(e) => handleChange("lastName", e.target.value)}
-          />
-          <Input
-            label="Student Number"
-            value={formData.studentNumber}
-            disabled={!isEditing}
-            onChange={(e) => handleChange("studentNumber", e.target.value)}
-          />
+          <Input label="First Name" value={formData.firstName} disabled={!isEditing}
+            onChange={(e) => handleChange("firstName", e.target.value)} />
+
+          <Input label="Last Name" value={formData.lastName} disabled={!isEditing}
+            onChange={(e) => handleChange("lastName", e.target.value)} />
+
+          <Input label="Student Number" value={formData.studentNumber} disabled={!isEditing}
+            onChange={(e) => handleChange("studentNumber", e.target.value)} />
+
           <Input label="ID Number" value={formData.idNumber} disabled />
-          <IconInput
-            label="Email Address"
-            icon={<Mail className="w-5 h-5 text-gray-400" />}
-            value={formData.email}
-            disabled={!isEditing}
-            onChange={(e) => handleChange("email", e.target.value)}
-          />
-          <IconInput
-            label="Phone Number"
-            icon={<Phone className="w-5 h-5 text-gray-400" />}
-            value={formData.phone}
-            disabled={!isEditing}
-            onChange={(e) => handleChange("phone", e.target.value)}
-          />
+
+          <IconInput label="Email Address" icon={<Mail className="w-5 h-5 text-gray-400" />}
+            value={formData.email} disabled={!isEditing}
+            onChange={(e) => handleChange("email", e.target.value)} />
+
+          <IconInput label="Phone Number" icon={<Phone className="w-5 h-5 text-gray-400" />}
+            value={formData.phone} disabled={!isEditing}
+            onChange={(e) => handleChange("phone", e.target.value)} />
         </Grid>
       </Section>
 
-      {/* ================= BIOGRAPHICAL ================= */}
       <Section title="Biographical Information">
         <Grid>
-          <Input
-            type="date"
-            label="Date of Birth"
-            value={formData.dateOfBirth}
+          <Input type="date" label="Date of Birth" value={formData.dateOfBirth}
             disabled={!isEditing}
-            onChange={(e) => handleChange("dateOfBirth", e.target.value)}
-          />
-          <Select
-            label="Gender"
-            value={formData.gender}
-            disabled={!isEditing}
+            onChange={(e) => handleChange("dateOfBirth", e.target.value)} />
+
+          <Select label="Gender" value={formData.gender} disabled={!isEditing}
             onChange={(e) => handleChange("gender", e.target.value)}
-            options={["male", "female", "other"]}
-          />
-          <Textarea
-            label="Address"
-            value={formData.address}
+            options={["male", "female", "other"]} />
+
+          <Textarea label="Address" value={formData.address}
             disabled={!isEditing}
-            onChange={(e) => handleChange("address", e.target.value)}
-          />
+            onChange={(e) => handleChange("address", e.target.value)} />
         </Grid>
       </Section>
 
-      {/* ================= ACADEMIC ================= */}
       <Section title="Academic Information">
         <Grid>
-          <Input
-            label="Faculty"
-            value={formData.faculty}
-            disabled={!isEditing}
-            onChange={(e) => handleChange("faculty", e.target.value)}
-          />
-          <Input
-            label="Programme"
-            value={formData.programme}
-            disabled={!isEditing}
-            onChange={(e) => handleChange("programme", e.target.value)}
-          />
-          <Input
-            label="Registration Date"
-            value={formatDate(formData.registrationDate)}
-            disabled
-          />
+          <Input label="Faculty" value={formData.faculty} disabled={!isEditing}
+            onChange={(e) => handleChange("faculty", e.target.value)} />
+
+          <Input label="Programme" value={formData.programme} disabled={!isEditing}
+            onChange={(e) => handleChange("programme", e.target.value)} />
+
+          <Input label="Registration Date" value={formatDate(formData.registrationDate)} disabled />
           <Input label="Status" value={formData.status} disabled />
         </Grid>
       </Section>
@@ -224,7 +203,8 @@ const StudentProfile = ({ student, onUpdate, showToast }) => {
   );
 };
 
-/* ================= UI HELPERS (UNCHANGED) ================= */
+/* ================= UI HELPERS ================= */
+
 const Section = ({ title, action, children }) => (
   <div className="rounded-lg p-6 shadow-sm" style={{ backgroundColor: COLORS.bgWhite }}>
     <div className="flex justify-between items-center mb-6">
