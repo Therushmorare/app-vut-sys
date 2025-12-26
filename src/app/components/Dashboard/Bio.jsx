@@ -18,6 +18,7 @@ const StudentBiographic = ({ student, onUpdate, showToast }) => {
   useEffect(() => {
     if (!student) return;
     setFormData(apiToForm(student));
+    setErrors({});
   }, [student]);
 
   const handleChange = (field, value) => {
@@ -55,28 +56,46 @@ const StudentBiographic = ({ student, onUpdate, showToast }) => {
     };
 
     try {
-      const res = await axios.post("https://seta-management-api-fvzc9.ondigitalocean.app/api/students/edit-student", payload);
+      const res = await axios.post(
+        "https://seta-management-api-fvzc9.ondigitalocean.app/api/students/edit-student",
+        payload
+      );
 
-      if (res.status !== 200) {
-        throw new Error(res.data?.message || "Update failed");
+      // Success
+      if (res.status === 200) {
+        const updatedStudent = {
+          ...student,
+          date_of_birth: res.data.date_of_birth ?? formData.dateOfBirth,
+          gender: res.data.gender ?? formData.gender,
+          address: res.data.address ?? formData.address,
+        };
+        setFormData(apiToForm(updatedStudent));
+        onUpdate?.(updatedStudent);
+        showToast?.(
+          res.data?.message || "Biographical details updated successfully!",
+          "success"
+        );
+        setErrors({});
+      } else {
+        showToast?.("Update failed", "error");
       }
-
-      const updatedStudent = {
-        ...student,
-        date_of_birth: res.data.date_of_birth ?? formData.dateOfBirth,
-        gender: res.data.gender ?? formData.gender,
-        address: res.data.address ?? formData.address,
-      };
-
-      setFormData(apiToForm(updatedStudent));
-      onUpdate?.(updatedStudent);
-      showToast?.("Biographical details updated successfully!", "success");
     } catch (err) {
       console.error("Update error:", err);
-      showToast?.(
-        err.response?.data?.message || "Failed to update biographical details",
-        "error"
-      );
+
+      // Map field-specific backend errors if available
+      if (err.response?.data?.errors) {
+        const backendErrors = err.response.data.errors;
+        const fieldErrors = {};
+        Object.keys(backendErrors).forEach((key) => {
+          fieldErrors[key] = backendErrors[key][0]; // take first message
+        });
+        setErrors(fieldErrors);
+      }
+
+      // Show backend message
+      const message =
+        err.response?.data?.message || "Failed to update biographical details";
+      showToast?.(message, "error");
     } finally {
       setLoading(false);
     }
@@ -96,7 +115,7 @@ const StudentBiographic = ({ student, onUpdate, showToast }) => {
       >
         <Grid>
           {/* Date of Birth */}
-          <Field label="Date of Birth" error={errors.dateOfBirth}>
+          <Field label="Date of Birth" error={errors.date_of_birth || errors.dateOfBirth}>
             <input
               type="date"
               value={formData.dateOfBirth}
