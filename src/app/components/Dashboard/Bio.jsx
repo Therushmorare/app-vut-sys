@@ -66,6 +66,9 @@ const StudentBiographic = ({ student, onUpdate, showToast }) => {
         payload
       );
 
+      console.log("Backend response:", res.data); // 🔥 DEBUG
+
+      // Backend returns 200 with message and updated fields
       if (res.status === 200) {
         const updatedStudent = {
           ...student,
@@ -77,24 +80,30 @@ const StudentBiographic = ({ student, onUpdate, showToast }) => {
         setErrors({});
       }
     } catch (err) {
-      console.error("Update error:", err);
+      console.error("Update error caught:", err);
 
-      // Backend field-specific errors
-      if (err.response?.data?.errors) {
-        const backendErrors = err.response.data.errors;
-        const fieldErrors = {};
-        Object.keys(backendErrors).forEach((key) => {
-          // Map backend field to formData key if necessary
-          if (key === "date_of_birth") fieldErrors.dateOfBirth = backendErrors[key][0];
-          else if (key === "gender") fieldErrors.gender = backendErrors[key][0];
-          else if (key === "address") fieldErrors.address = backendErrors[key][0];
-        });
-        setErrors(fieldErrors);
+      let backendErrors = {};
+      let message = "Failed to update biographical details";
+
+      // Try to map backend field errors
+      if (err.response?.data) {
+        console.log("Backend error response:", err.response.data); // 🔥 DEBUG
+
+        if (err.response.data.errors) {
+          Object.keys(err.response.data.errors).forEach((key) => {
+            if (key === "date_of_birth") backendErrors.dateOfBirth = err.response.data.errors[key][0];
+            else if (key === "gender") backendErrors.gender = err.response.data.errors[key][0];
+            else if (key === "address") backendErrors.address = err.response.data.errors[key][0];
+          });
+          setErrors(backendErrors);
+        }
+
+        if (err.response.data.message) {
+          message = err.response.data.message;
+        }
       }
 
-      // Show general message
-      const message = err.response?.data?.message;
-      if (message) showToast?.(message, "error");
+      showToast?.(message, "error");
     } finally {
       setLoading(false);
     }
