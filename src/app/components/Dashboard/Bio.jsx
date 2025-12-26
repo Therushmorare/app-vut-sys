@@ -11,14 +11,19 @@ const apiToForm = (student) => ({
 });
 
 const StudentBiographic = ({ student, onUpdate, showToast }) => {
-  const [formData, setFormData] = useState(null);
+  const [formData, setFormData] = useState({
+    dateOfBirth: "",
+    gender: "",
+    address: "",
+  });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!student) return;
-    setFormData(apiToForm(student));
-    setErrors({});
+    if (student) {
+      setFormData(apiToForm(student));
+      setErrors({});
+    }
   }, [student]);
 
   const handleChange = (field, value) => {
@@ -64,27 +69,36 @@ const StudentBiographic = ({ student, onUpdate, showToast }) => {
       if (res.status === 200) {
         const updatedStudent = {
           ...student,
-          ...res.data, // merge all backend fields into student
+          ...res.data,
         };
-
         setFormData(apiToForm(updatedStudent));
         onUpdate?.(updatedStudent);
-
-        showToast?.(res.data.message || "Biographical details updated successfully!", "success");
+        showToast?.(res.data.message || "Profile updated successfully", "success");
         setErrors({});
       }
     } catch (err) {
       console.error("Update error:", err);
 
-      const message =
-        err.response?.data?.message || "Failed to update biographical details";
-      showToast?.(message, "error");
+      // Backend field-specific errors
+      if (err.response?.data?.errors) {
+        const backendErrors = err.response.data.errors;
+        const fieldErrors = {};
+        Object.keys(backendErrors).forEach((key) => {
+          // Map backend field to formData key if necessary
+          if (key === "date_of_birth") fieldErrors.dateOfBirth = backendErrors[key][0];
+          else if (key === "gender") fieldErrors.gender = backendErrors[key][0];
+          else if (key === "address") fieldErrors.address = backendErrors[key][0];
+        });
+        setErrors(fieldErrors);
+      }
+
+      // Show general message
+      const message = err.response?.data?.message;
+      if (message) showToast?.(message, "error");
     } finally {
       setLoading(false);
     }
   };
-
-  if (!formData) return null;
 
   return (
     <div className="space-y-6">
@@ -97,7 +111,6 @@ const StudentBiographic = ({ student, onUpdate, showToast }) => {
         }
       >
         <Grid>
-          {/* Date of Birth */}
           <Field label="Date of Birth" error={errors.dateOfBirth}>
             <input
               type="date"
@@ -108,7 +121,6 @@ const StudentBiographic = ({ student, onUpdate, showToast }) => {
             />
           </Field>
 
-          {/* Gender */}
           <Field label="Gender" error={errors.gender}>
             <select
               value={formData.gender}
@@ -123,7 +135,6 @@ const StudentBiographic = ({ student, onUpdate, showToast }) => {
             </select>
           </Field>
 
-          {/* Address */}
           <Field label="Address" error={errors.address} full>
             <textarea
               rows={3}
