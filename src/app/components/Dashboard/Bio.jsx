@@ -2,9 +2,7 @@
 
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { GraduationCap, Mail, Phone, Lock, Eye, EyeOff } from "lucide-react";
 import { COLORS } from "../../constants/colors";
-import { useRouter } from "next/navigation";
 
 const apiToForm = (student) => ({
   dateOfBirth: student?.date_of_birth ?? "",
@@ -42,21 +40,43 @@ const StudentBiographic = ({ student, onUpdate, showToast }) => {
       return;
     }
 
+    if (!student?.user_id && !student?.id) {
+      showToast?.("Missing student ID", "error");
+      return;
+    }
+
     setLoading(true);
 
-    try {
-      // 🔌 Hook API here when ready
-      onUpdate?.({
-        ...student,
-        date_of_birth: formData.dateOfBirth,
-        gender: formData.gender,
-        address: formData.address,
-      });
+    const payload = {
+      user_id: student.user_id || student.id,
+      date_of_birth: formData.dateOfBirth,
+      gender: formData.gender,
+      address: formData.address.trim(),
+    };
 
-      showToast?.("Biographical details updated", "success");
+    try {
+      const res = await axios.post("https://seta-management-api-fvzc9.ondigitalocean.app/api/students/edit-student", payload);
+
+      if (res.status !== 200) {
+        throw new Error(res.data?.message || "Update failed");
+      }
+
+      const updatedStudent = {
+        ...student,
+        date_of_birth: res.data.date_of_birth ?? formData.dateOfBirth,
+        gender: res.data.gender ?? formData.gender,
+        address: res.data.address ?? formData.address,
+      };
+
+      setFormData(apiToForm(updatedStudent));
+      onUpdate?.(updatedStudent);
+      showToast?.("Biographical details updated successfully!", "success");
     } catch (err) {
-      console.error(err);
-      showToast?.("Failed to update biographical details", "error");
+      console.error("Update error:", err);
+      showToast?.(
+        err.response?.data?.message || "Failed to update biographical details",
+        "error"
+      );
     } finally {
       setLoading(false);
     }
@@ -76,10 +96,7 @@ const StudentBiographic = ({ student, onUpdate, showToast }) => {
       >
         <Grid>
           {/* Date of Birth */}
-          <Field
-            label="Date of Birth"
-            error={errors.dateOfBirth}
-          >
+          <Field label="Date of Birth" error={errors.dateOfBirth}>
             <input
               type="date"
               value={formData.dateOfBirth}
@@ -90,10 +107,7 @@ const StudentBiographic = ({ student, onUpdate, showToast }) => {
           </Field>
 
           {/* Gender */}
-          <Field
-            label="Gender"
-            error={errors.gender}
-          >
+          <Field label="Gender" error={errors.gender}>
             <select
               value={formData.gender}
               onChange={(e) => handleChange("gender", e.target.value)}
@@ -108,11 +122,7 @@ const StudentBiographic = ({ student, onUpdate, showToast }) => {
           </Field>
 
           {/* Address */}
-          <Field
-            label="Address"
-            error={errors.address}
-            full
-          >
+          <Field label="Address" error={errors.address} full>
             <textarea
               rows={3}
               value={formData.address}
@@ -127,8 +137,7 @@ const StudentBiographic = ({ student, onUpdate, showToast }) => {
   );
 };
 
-/* ================= UI HELPERS (CONSISTENT) ================= */
-
+/* ================= UI HELPERS ================= */
 const Section = ({ title, action, children }) => (
   <div className="rounded-lg p-6 shadow-sm" style={{ backgroundColor: COLORS.bgWhite }}>
     <div className="flex justify-between items-center mb-6">
@@ -142,16 +151,12 @@ const Section = ({ title, action, children }) => (
 );
 
 const Grid = ({ children }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-    {children}
-  </div>
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">{children}</div>
 );
 
 const Field = ({ label, error, children, full }) => (
   <div className={full ? "md:col-span-2" : ""}>
-    <label className="block text-sm font-medium mb-2 text-gray-700">
-      {label}
-    </label>
+    <label className="block text-sm font-medium mb-2 text-gray-700">{label}</label>
     {children}
     {error && <p className="text-sm text-red-600 mt-1">{error}</p>}
   </div>
@@ -167,10 +172,7 @@ const ButtonBase = ({ children, ...props }) => (
 );
 
 const SuccessButton = (props) => (
-  <ButtonBase
-    {...props}
-    style={{ backgroundColor: COLORS.success, color: "#fff" }}
-  />
+  <ButtonBase {...props} style={{ backgroundColor: COLORS.success, color: "#fff" }} />
 );
 
 export default StudentBiographic;
