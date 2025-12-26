@@ -1,276 +1,212 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { Mail, Phone } from "lucide-react";
-import { COLORS } from "../../constants/colors";
-import { formatDate } from "../../utils/date";
-
-const API_URL =
-  "https://seta-management-api-fvzc9.ondigitalocean.app/api/students/student/profile/update";
-
-/* ================= NORMALIZERS ================= */
-const apiToForm = (s) => ({
-  userId: s.user_id ?? s.id,
-  firstName: s.first_name ?? "",
-  lastName: s.last_name ?? "",
-  email: s.email ?? "",
-  phone: s.phone_number ?? "",
-  dateOfBirth: s.date_of_birth ?? "",
-  gender: s.gender?.toLowerCase() ?? "",
-  idNumber: s.ID_number ?? "",
-  address: s.address ?? "",
-  studentNumber: s.student_number ?? "",
-  faculty: s.faculty ?? "",
-  programme: s.programme ?? "",
-  registrationDate: s.registration_date ?? "",
-  status: s.status ?? "",
-});
-
-const formToApi = (f) => ({
-  user_id: f.userId,
-  first_name: f.firstName.trim(),
-  last_name: f.lastName.trim(),
-  email: f.email.trim().toLowerCase(),
-  phone_number: f.phone.trim(),
-  date_of_birth: f.dateOfBirth || null,
-  gender: f.gender,
-  ID_number: f.idNumber,
-  address: f.address.trim(),
-  student_number: f.studentNumber.trim(),
-  faculty: f.faculty.trim(),
-  programme: f.programme.trim(),
-});
-
-/* ================= VALIDATION ================= */
-const validateForm = (f) => {
-  if (!f.firstName.trim()) return "First name is required";
-  if (!f.lastName.trim()) return "Last name is required";
-  if (!f.email.trim()) return "Email is required";
-  if (!f.phone.trim()) return "Phone number is required";
-  if (!f.studentNumber.trim()) return "Student number is required";
-  if (!f.gender) return "Gender is required";
-  return null;
-};
+import { useState } from 'react';
+import { Mail, Phone } from 'lucide-react';
+import { COLORS } from '../../constants/colors';
+import { formatDate } from '../../utils/date';
 
 const StudentProfile = ({ student, onUpdate, showToast }) => {
-  const [formData, setFormData] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [apiError, setApiError] = useState(null);
-
-  /* ================= INIT ================= */
-  useEffect(() => {
-    if (!student) return;
-    setFormData(apiToForm(student));
-    setApiError(null);
-  }, [student]);
+  const [formData, setFormData] = useState(student);
 
   const handleChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    setApiError(null);
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  /* ================= SAVE ================= */
-  const handleSave = async () => {
-    const error = validateForm(formData);
-    if (error) {
-      setApiError(error);
-      showToast?.(error, "error");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formToApi(formData)),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data?.message || "Profile update failed");
-      }
-
-      const updatedStudent = apiToForm(data);
-
-      // 🔐 AUTH SAFETY CHECK
-      if (!updatedStudent.userId || !updatedStudent.email) {
-        throw new Error("Invalid profile response from server");
-      }
-
-      setFormData(updatedStudent);
-      onUpdate?.(updatedStudent);
-      setIsEditing(false);
-      showToast?.("Profile updated successfully!", "success");
-    } catch (err) {
-      console.error(err);
-      setApiError(err.message);
-      showToast?.(err.message, "error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCancel = () => {
-    setFormData(apiToForm(student));
+  const handleSave = () => {
+    onUpdate(formData);
     setIsEditing(false);
-    setApiError(null);
+    showToast('Profile updated successfully!', 'success');
   };
-
-  if (!formData) return null;
 
   return (
     <div className="space-y-6">
-      <Section
-        title="Personal Information"
-        action={
-          !isEditing ? (
-            <PrimaryButton onClick={() => setIsEditing(true)}>
+      {/* Personal Information */}
+      <div className="rounded-lg p-6 shadow-sm" style={{ backgroundColor: COLORS.bgWhite }}>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold" style={{ color: COLORS.primary }}>
+            Personal Information
+          </h2>
+          {!isEditing ? (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90"
+              style={{ backgroundColor: COLORS.primary }}
+            >
               Edit Profile
-            </PrimaryButton>
+            </button>
           ) : (
             <div className="flex gap-2">
-              <SuccessButton onClick={handleSave} disabled={loading}>
-                {loading ? "Saving..." : "Save Changes"}
-              </SuccessButton>
-              <SecondaryButton onClick={handleCancel}>
+              <button
+                onClick={handleSave}
+                className="px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90"
+                style={{ backgroundColor: COLORS.success }}
+              >
+                Save Changes
+              </button>
+              <button
+                onClick={() => {
+                  setIsEditing(false);
+                  setFormData(student);
+                }}
+                className="px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 border"
+                style={{ color: COLORS.text, borderColor: COLORS.border }}
+              >
                 Cancel
-              </SecondaryButton>
+              </button>
             </div>
-          )
-        }
-      >
-        {apiError && (
-          <div className="mb-4 p-3 rounded bg-red-100 text-red-700 border border-red-300">
-            {apiError}
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium mb-2 text-gray-700">
+              First Name
+            </label>
+            <input
+              type="text"
+              value={formData.firstName}
+              onChange={(e) => handleChange('firstName', e.target.value)}
+              disabled={!isEditing}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 disabled:bg-gray-50"
+              style={{ borderColor: COLORS.border }}
+            />
           </div>
-        )}
 
-        <Grid>
-          <Input label="First Name" value={formData.firstName} disabled={!isEditing}
-            onChange={(e) => handleChange("firstName", e.target.value)} />
+          <div>
+            <label className="block text-sm font-medium mb-2 text-gray-700">
+              Last Name
+            </label>
+            <input
+              type="text"
+              value={formData.lastName}
+              onChange={(e) => handleChange('lastName', e.target.value)}
+              disabled={!isEditing}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 disabled:bg-gray-50"
+              style={{ borderColor: COLORS.border }}
+            />
+          </div>
 
-          <Input label="Last Name" value={formData.lastName} disabled={!isEditing}
-            onChange={(e) => handleChange("lastName", e.target.value)} />
+          <div>
+            <label className="block text-sm font-medium mb-2 text-gray-700">
+              ID Number
+            </label>
+            <input
+              type="text"
+              value={formData.idNumber}
+              disabled
+              className="w-full px-4 py-2 border rounded-lg bg-gray-50"
+              style={{ borderColor: COLORS.border }}
+            />
+          </div>
 
-          <Input label="Student Number" value={formData.studentNumber} disabled={!isEditing}
-            onChange={(e) => handleChange("studentNumber", e.target.value)} />
+          <div>
+            <label className="block text-sm font-medium mb-2 text-gray-700">
+              Email Address
+            </label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="email"
+                value={formData.email}
+                onChange={(e) => handleChange('email', e.target.value)}
+                disabled={!isEditing}
+                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 disabled:bg-gray-50"
+                style={{ borderColor: COLORS.border }}
+              />
+            </div>
+          </div>
 
-          <Input label="ID Number" value={formData.idNumber} disabled />
+          <div>
+            <label className="block text-sm font-medium mb-2 text-gray-700">
+              Phone Number
+            </label>
+            <div className="relative">
+              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => handleChange('phone', e.target.value)}
+                disabled={!isEditing}
+                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 disabled:bg-gray-50"
+                style={{ borderColor: COLORS.border }}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
 
-          <IconInput label="Email Address" icon={<Mail className="w-5 h-5 text-gray-400" />}
-            value={formData.email} disabled={!isEditing}
-            onChange={(e) => handleChange("email", e.target.value)} />
+      {/* Placement Information */}
+      {(student.setaAllocation || student.placement) && (
+        <div className="rounded-lg p-6 shadow-sm" style={{ backgroundColor: COLORS.bgWhite }}>
+          <h2 className="text-xl font-bold mb-6" style={{ color: COLORS.primary }}>
+            Placement Information
+          </h2>
+          <div className="space-y-6">
+            {student.setaAllocation && (
+              <div className="border-l-4 pl-4" style={{ borderColor: COLORS.info }}>
+                <h3 className="font-semibold mb-3" style={{ color: COLORS.primary }}>
+                  SETA Allocation
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">SETA Name</p>
+                    <p className="font-medium" style={{ color: COLORS.primary }}>
+                      {student.setaAllocation}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Agreement Status</p>
+                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                      student.setaAgreementSigned ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {student.setaAgreementSigned ? 'Signed' : 'Pending'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
 
-          <IconInput label="Phone Number" icon={<Phone className="w-5 h-5 text-gray-400" />}
-            value={formData.phone} disabled={!isEditing}
-            onChange={(e) => handleChange("phone", e.target.value)} />
-        </Grid>
-      </Section>
-
-      <Section title="Biographical Information">
-        <Grid>
-          <Input type="date" label="Date of Birth" value={formData.dateOfBirth}
-            disabled={!isEditing}
-            onChange={(e) => handleChange("dateOfBirth", e.target.value)} />
-
-          <Select label="Gender" value={formData.gender} disabled={!isEditing}
-            onChange={(e) => handleChange("gender", e.target.value)}
-            options={["male", "female", "other"]} />
-
-          <Textarea label="Address" value={formData.address}
-            disabled={!isEditing}
-            onChange={(e) => handleChange("address", e.target.value)} />
-        </Grid>
-      </Section>
-
-      <Section title="Academic Information">
-        <Grid>
-          <Input label="Faculty" value={formData.faculty} disabled={!isEditing}
-            onChange={(e) => handleChange("faculty", e.target.value)} />
-
-          <Input label="Programme" value={formData.programme} disabled={!isEditing}
-            onChange={(e) => handleChange("programme", e.target.value)} />
-
-          <Input label="Registration Date" value={formatDate(formData.registrationDate)} disabled />
-          <Input label="Status" value={formData.status} disabled />
-        </Grid>
-      </Section>
+            {student.placement && (
+              <div className="border-l-4 pl-4" style={{ borderColor: COLORS.success }}>
+                <h3 className="font-semibold mb-3" style={{ color: COLORS.primary }}>
+                  Host Company Placement
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Company Name</p>
+                    <p className="font-medium" style={{ color: COLORS.primary }}>
+                      {student.placement.company}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Supervisor</p>
+                    <p className="font-medium" style={{ color: COLORS.primary }}>
+                      {student.placement.supervisor || 'TBA'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Start Date</p>
+                    <p className="font-medium" style={{ color: COLORS.primary }}>
+                      {formatDate(student.placement.startDate)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Agreement Status</p>
+                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                      student.placementAgreementSigned ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {student.placementAgreementSigned ? 'Signed' : 'Pending'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
-
-/* ================= UI HELPERS ================= */
-
-const Section = ({ title, action, children }) => (
-  <div className="rounded-lg p-6 shadow-sm" style={{ backgroundColor: COLORS.bgWhite }}>
-    <div className="flex justify-between items-center mb-6">
-      <h2 className="text-xl font-bold" style={{ color: COLORS.primary }}>
-        {title}
-      </h2>
-      {action}
-    </div>
-    {children}
-  </div>
-);
-
-const Grid = ({ children }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">{children}</div>
-);
-
-const ButtonBase = ({ children, ...props }) => (
-  <button {...props} className="px-4 py-2 rounded-lg text-sm font-medium">
-    {children}
-  </button>
-);
-
-const PrimaryButton = (props) => (
-  <ButtonBase {...props} style={{ backgroundColor: COLORS.primary, color: "#fff" }} />
-);
-const SuccessButton = (props) => (
-  <ButtonBase {...props} style={{ backgroundColor: COLORS.success, color: "#fff" }} />
-);
-const SecondaryButton = (props) => (
-  <ButtonBase {...props} style={{ border: `1px solid ${COLORS.border}`, color: COLORS.text }} />
-);
-
-const Input = ({ label, ...props }) => (
-  <div>
-    <label className="block text-sm font-medium mb-2 text-gray-700">{label}</label>
-    <input {...props} className="w-full px-4 py-2 border rounded-lg bg-gray-50" />
-  </div>
-);
-
-const IconInput = ({ label, icon, ...props }) => (
-  <div>
-    <label className="block text-sm font-medium mb-2 text-gray-700">{label}</label>
-    <div className="relative">
-      <span className="absolute left-3 top-1/2 -translate-y-1/2">{icon}</span>
-      <input {...props} className="w-full pl-10 pr-4 py-2 border rounded-lg bg-gray-50" />
-    </div>
-  </div>
-);
-
-const Select = ({ label, options, ...props }) => (
-  <div>
-    <label className="block text-sm font-medium mb-2 text-gray-700">{label}</label>
-    <select {...props} className="w-full px-4 py-2 border rounded-lg bg-gray-50">
-      <option value="">Select {label.toLowerCase()}</option>
-      {options.map((opt) => (
-        <option key={opt} value={opt}>{opt}</option>
-      ))}
-    </select>
-  </div>
-);
-
-const Textarea = ({ label, ...props }) => (
-  <div className="md:col-span-2">
-    <label className="block text-sm font-medium mb-2 text-gray-700">{label}</label>
-    <textarea {...props} rows={3} className="w-full px-4 py-2 border rounded-lg bg-gray-50" />
-  </div>
-);
 
 export default StudentProfile;

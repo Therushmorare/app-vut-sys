@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Home, FileText, User, Bell, CreditCard } from "lucide-react";
+import { Home, FileText, User, Bell, CreditCard, IdCard, GraduationCap } from "lucide-react";
 import { COLORS } from "../constants/colors";
 
 import { StudentProvider, useStudent } from "../constants/context"; // ✅ import context
@@ -12,6 +12,8 @@ import Profile from "./Dashboard/Profile";
 import DocumentUpload from "./Documents";
 import Notifications from "./Notifications";
 import Banking from "./Banking/Banking";
+import Bio from "./Dashboard/Bio";
+import Academics from "./Dashboard/Academics";
 
 // Wrapper to provide context and access showToast
 function DocumentsWrapper() {
@@ -51,7 +53,9 @@ export default function StudentPortal() {
     { id: "dashboard", label: "Dashboard", icon: Home },
     { id: "documents", label: "Documents", icon: FileText },
     { id: "profile", label: "Profile", icon: User },
-    {id: "banking", label: "Banking", icon: CreditCard},
+    { id: "banking", label: "Banking", icon: CreditCard},
+    { id: "biographical", label: "Biographical", icon: IdCard},
+    { id: "academics", label: "Academics", icon: GraduationCap},
     { id: "notifications", label: "Notifications", icon: Bell },
   ];
 
@@ -108,6 +112,11 @@ export default function StudentPortal() {
               </div>
             )}
             {activeView === "banking" && <Banking student={currentStudent} />}
+            
+            {activeView === "biographical" && <Bio student={currentStudent} />}
+
+            {activeView === "academics" && <Academics student={currentStudent} />}
+
             {activeView === "notifications" && (
               <div
                 className="rounded-lg p-8 shadow-sm text-center"
