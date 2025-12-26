@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { GraduationCap, Mail, Phone, Lock, Eye, EyeOff } from "lucide-react";
 import { COLORS } from "../../constants/colors";
