@@ -221,7 +221,7 @@ const Registration = ({ onRegister, onSwitchToLogin }) => {
                 <input
                 type="text"
                 value={formData.studentNumber}
-                onChange={e => handleChange("idNumber", e.target.value)}
+                onChange={e => handleChange("studentNumber", e.target.value)}
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
                 style={{ borderColor: errors.studentNumber ? COLORS.danger : COLORS.border }}
                 maxLength="15"
