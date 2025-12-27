@@ -60,6 +60,7 @@ const Registration = ({ onRegister, onSwitchToLogin }) => {
     if (!formData.phone.trim()) newErrors.phone = "Phone number is required";
     if (!formData.idNumber.trim()) newErrors.idNumber = "ID number is required";
     else if (formData.idNumber.length !== 13) newErrors.idNumber = "ID number must be 13 digits";
+    if (!formData.studentNumber.trim()) newErrors.studentNumber = "Student number is required";
     if (!formData.programme) newErrors.programme = "Programme is required";
     if (!formData.password) newErrors.password = "Password is required";
     else if (formData.password.length < 6) newErrors.password = "Password must be at least 6 characters";
@@ -86,7 +87,8 @@ const Registration = ({ onRegister, onSwitchToLogin }) => {
         id_number: formData.idNumber,
         faculty: formData.faculty,
         programme: formData.programme,
-        password: formData.password
+        password: formData.password,
+        student_number: formData.studentNumber
       };
 
       const response = await axios.post(
@@ -211,6 +213,21 @@ const Registration = ({ onRegister, onSwitchToLogin }) => {
                 placeholder="0012315678912"
               />
               {errors.idNumber && <p className="text-sm mt-1" style={{ color: COLORS.danger }}>{errors.idNumber}</p>}
+            </div>
+
+            {/* Student Number */}
+            <div>
+              <label className="block text-sm font-medium mb-2 text-gray-700">Student Number *</label>
+                <input
+                type="text"
+                value={formData.studentNumber}
+                onChange={e => handleChange("idNumber", e.target.value)}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
+                style={{ borderColor: errors.studentNumber ? COLORS.danger : COLORS.border }}
+                maxLength="15"
+                placeholder="2134665542"
+              />
+              {errors.studentNumber && <p className="text-sm mt-1" style={{ color: COLORS.danger }}>{errors.studentNumber}</p>}
             </div>
 
             {/* Faculty */}
